@@ -1,0 +1,51 @@
+from datetime import datetime, timedelta
+from typing import Optional
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer
+import os
+from pathlib import Path
+
+SECRET_KEY = ""
+ALGORITHM = ""
+ACCESS_TOKEN_EXPIRE_MINUTES = 0
+
+
+secret_path = Path("/run/secrets/secrete_key")
+if secret_path.exists():
+    SECRET_KEY = secret_path.read_text().strip()
+    ALGORITHM = Path("/run/secrets/algorithm").read_text().strip() or "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES = Path("/run/secrets/access_token_expire_minutes").read_text().strip()
+    if not ACCESS_TOKEN_EXPIRE_MINUTES.isdigit():
+        ACCESS_TOKEN_EXPIRE_MINUTES = 30
+else:
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    ALGORITHM = os.getenv("SECRET_KEY","HS256")
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+bearer_scheme = HTTPBearer()
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_token(token: str = Depends(bearer_scheme)):
+    try:
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Token has expired or is invalid")
+        return username
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token has expired or is invalid")
