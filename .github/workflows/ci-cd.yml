@@ -11,7 +11,7 @@ permissions:
 
 env:
   IMAGE_NAME: ejahdilan/fastapi-app
-  DOCKER_CONTEXT: default               
+  DOCKER_CONTEXT: .              
   COMPOSE_FILE: docker-compose.yml 
   REMOTE_DEPLOY_DIR: /home/churnsvc/churn-app-deploy
   LATEST_TAG: v1
@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
