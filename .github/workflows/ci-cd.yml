@@ -1,0 +1,154 @@
+name: CI/CD – build & deploy
+
+# only run pipeline when pushing to the specific branch
+on:
+  push:
+    branches:
+      - ci/cd-test
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  IMAGE_NAME: ejahdilan/fastapi-app       # change to your Docker Hub repo (or build multiple images by expanding job)
+  DOCKER_CONTEXT: .                      # path to Dockerfile context
+  COMPOSE_FILE: docker-compose.yml       # file in repo to copy to VM
+  REMOTE_DEPLOY_DIR: /home/churnsvc/churn-app-deploy # path on VM where compose file will be copied
+  LATEST_TAG: v1
+
+jobs:
+  build-and-push:
+    name: Build (Buildx) and push Docker image
+    runs-on: ubuntu-latest
+    outputs:
+      image_full: ${{ steps.set-tags.outputs.image_full }}
+      image_sha: ${{ steps.set-tags.outputs.image_sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        id: docker-cache
+        with:
+          path: /tmp/.buildx-cache
+          key: buildx-cache-${{ github.sha }}
+          restore-keys: |
+            buildx-cache-
+
+      - name: Set image tags
+        id: set-tags
+        run: |
+          SHORT_SHA=${GITHUB_SHA::8}
+          IMAGE_SHA_TAG=${IMAGE_NAME}:${SHORT_SHA}
+          IMAGE_LATEST_TAG=${IMAGE_NAME}:${LATEST_TAG}
+          echo "image_sha=${IMAGE_SHA_TAG}" >> $GITHUB_OUTPUT
+          echo "image_full=${IMAGE_LATEST_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }} # use PAT (access token) or Docker Hub password if allowed
+
+      - name: Build and push image (multi-platform ready)
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.DOCKER_CONTEXT }}
+          file: ${{ env.DOCKER_CONTEXT }}/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.set-tags.outputs.image_sha }}
+            ${{ steps.set-tags.outputs.image_full }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          builder: default
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache || true
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
+
+  deploy-to-azure-vm:
+    name: Copy compose and deploy to Azure VM
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout repo (to get compose file)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Prepare known_hosts entry for SSH
+        id: known-hosts
+        run: |
+          # This ensures we add the VM's SSH host key to known_hosts to prevent MITM prompts.
+          # We use ssh-keyscan; replace ${{ secrets.AZURE_SSH_HOST }} if needed.
+          SSH_HOST=${{ secrets.AZURE_SSH_HOST }}
+          echo "Scanning $SSH_HOST for SSH host key..."
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+        env:
+          AZURE_SSH_HOST: ${{ secrets.AZURE_SSH_HOST }}
+
+      - name: Copy docker-compose to Azure VM
+        uses: appleboy/scp-action@v0.1.12
+        with:
+          host: ${{ secrets.AZURE_SSH_HOST }}
+          username: ${{ secrets.AZURE_SSH_USER }}
+          port: ${{ secrets.AZURE_SSH_PORT || 22 }}
+          key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
+          source: ${{ env.COMPOSE_FILE }}
+          target: ${{ env.REMOTE_DEPLOY_DIR }}
+          strip_components: 0
+        # Note: source supports globbing; copy additional files if needed
+
+      - name: Pull image and deploy on remote VM (docker-compose)
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.AZURE_SSH_HOST }}
+          username: ${{ secrets.AZURE_SSH_USER }}
+          port: ${{ secrets.AZURE_SSH_PORT || 22 }}
+          key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+
+            # ensure directory
+            mkdir -p {{ REMOTE_DIR }} || true
+            cd {{ REMOTE_DIR }}
+
+            # optional: export Docker Hub credentials as env so docker-compose can pull private images
+            export DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+            export DOCKERHUB_TOKEN="${{ secrets.DOCKERHUB_TOKEN }}"
+
+            # login to docker hub (non-interactive)
+            echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+
+            # change to deploy dir
+            cd "${{ env.REMOTE_DEPLOY_DIR }}" || exit 1
+
+            # Pull and restart services
+            if command -v docker-compose >/dev/null 2>&1; then
+              docker-compose pull --ignore-pull-failures
+              docker-compose up -d --remove-orphans
+            else
+              # If using Swarm stack deploy: assume docker stack file name is docker-stack.yml
+              docker stack deploy -c docker-stack.yml mlflow_stack || true
+            fi
+
+            # optional: cleanup dangling images
+            docker image prune -f || true
+        env:
+          REMOTE_DIR: ${{ env.REMOTE_DEPLOY_DIR }}
+
