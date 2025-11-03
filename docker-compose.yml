@@ -28,4 +28,4 @@ services:
 
 networks:
   churnnet:
-    external: true
+    driver: bridge

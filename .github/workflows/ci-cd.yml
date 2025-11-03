@@ -234,8 +234,8 @@ jobs:
 
             # Pull and restart services
             if command -v docker-compose >/dev/null 2>&1; then
-              docker-compose pull --ignore-pull-failures
-              docker-compose up -d --remove-orphans
+              docker compose pull --ignore-pull-failures
+              docker compose up -d --remove-orphans
             else
               echo "docker-compose not found, cannot deploy services."
               exit 1
