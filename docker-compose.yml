@@ -27,6 +27,6 @@ services:
 #   db2_password:
 #     file: /home/churnsvc/mlflow_setup/secrets/db2_pass.txt
 
-# networks:
-#   churnnet:
-#     driver: bridge
+networks:
+  churnnet:
+    driver: bridge
