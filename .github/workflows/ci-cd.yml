@@ -211,11 +211,11 @@ jobs:
         # Note: source supports globbing; copy additional files if needed
 
       - name: Pull image and deploy on remote VM (docker-compose)
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1
         env:
-        REMOTE_DIR: ${{ env.REMOTE_DEPLOY_DIR }}
-        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          REMOTE_DIR: ${{ env.REMOTE_DEPLOY_DIR }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         with:
           host: ${{ secrets.AZURE_SSH_HOST }}
           username: ${{ secrets.AZURE_SSH_USER }}
@@ -240,6 +240,6 @@ jobs:
               echo "docker-compose not found, cannot deploy services."
               exit 1
             fi
-            
+
             # optional: cleanup dangling images
             docker image prune -f || true
