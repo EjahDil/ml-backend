@@ -8,8 +8,8 @@ from contextlib import asynccontextmanager
 from db.database import create_db_and_tables
 from utils.create_admin_user import create_default_admin
 
-from controllers.routes import auth, prediction, user, admin
-from db.create_database import create_database_if_not_exists
+from controllers.routes import auth, prediction, user, admin, health_check
+from init_db import create_database_if_not_exists
 
 # --------------------------
 # Load MLflow model from Registry
@@ -197,6 +197,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Churn Prediction API", lifespan=lifespan)
 
 # Register routers
+app.include_router(health_check.router)
 app.include_router(auth.router)
 app.include_router(prediction.router)
 app.include_router(admin.router)
