@@ -57,8 +57,6 @@ RUN pip install --upgrade pip && pip install --prefix=/install -r requirements.t
 COPY src/ /app/src/
 COPY alembic/ /app/alembic/
 COPY alembic.ini /app/alembic.ini
-COPY init_db.py /app/init_db.py
-
 
 
 # Final stage
@@ -75,6 +73,8 @@ COPY --from=builder /install /usr/local
 COPY --from=builder /app/src /app/src
 COPY --from=builder /app/alembic /app/alembic
 COPY --from=builder /app/alembic.ini /app/alembic.ini
+
+COPY init_db.py /app/init_db.py
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
