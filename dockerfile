@@ -57,6 +57,9 @@ RUN pip install --upgrade pip && pip install --prefix=/install -r requirements.t
 COPY src/ /app/src/
 COPY alembic/ /app/alembic/
 COPY alembic.ini /app/alembic.ini
+COPY init_db.py /app/init_db.py
+
+
 
 # Final stage
 FROM python:3.11-slim

@@ -104,29 +104,29 @@ from db.create_database import create_database_if_not_exists
 
 
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     # --- Startup code ---
-#     create_db_and_tables()  # ensure tables exist
-#     try:
-#         create_default_admin()  # ensure admin user exists
-#     except Exception as e:
-#         print("Failed to create default admin on startup:", e)
-
-#     yield  # app runs here
-
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_database_if_not_exists("telecom_churn")
-    create_db_and_tables()
+    # --- Startup code ---
+    create_db_and_tables()  # ensure tables exist
     try:
-        await create_default_admin()
+        create_default_admin()  # ensure admin user exists
     except Exception as e:
         print("Failed to create default admin on startup:", e)
 
-    yield
+    yield  # app runs here
+
+
+
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     create_database_if_not_exists("telecom_churn")
+#     create_db_and_tables()
+#     try:
+#         await create_default_admin()
+#     except Exception as e:
+#         print("Failed to create default admin on startup:", e)
+
+#     yield
 
 
 

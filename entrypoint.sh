@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e  # Exit immediately if a command fails
 
+# Create DB if not exists
+python /app/init_db.py
+
 # Navigate to app directory
 cd /app
 
