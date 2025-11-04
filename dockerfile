@@ -74,7 +74,7 @@ COPY --from=builder /app/src /app/src
 COPY --from=builder /app/alembic /app/alembic
 COPY --from=builder /app/alembic.ini /app/alembic.ini
 
-COPY init_db.py /app/init_db.py
+# COPY init_db.py /app/init_db.py
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
