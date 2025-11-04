@@ -4,12 +4,12 @@ from typing import Generator
 import os
 from dotenv import load_dotenv
 
-# Get absolute path to the root project directory
-base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-dotenv_path = os.path.join(base_dir, ".env")
+# # Get absolute path to the root project directory
+# base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# dotenv_path = os.path.join(base_dir, ".env")
 
 # Load the .env file from the root
-load_dotenv(dotenv_path)
+load_dotenv()
 
 # Environment variables for the second database
 DB2_USER = os.getenv("DB2_USER")
