@@ -10,9 +10,6 @@ class UserBase(BaseModel):
     team: str
     role: str
     address: str
-    ## I add this cod
-    # created_at: Optional[date] = None
-    # updated_at: Optional[date] = None
     is_active: Optional[bool] = True
 
 

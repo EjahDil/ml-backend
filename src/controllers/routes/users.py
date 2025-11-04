@@ -16,18 +16,18 @@ router = APIRouter()
 
 @router.post("/register")
 def register(user_data: UserCreate, db: Session = Depends(get_db)):    
-    # log.info("Register attempt", data=user_data.model_dump())  # Décommente pour debug
+   
     db_user = db.query(users_schema).filter(users_schema.phone == user_data.phone).first()
     if db_user:
         raise HTTPException(status_code=400, detail="user already exists")
     
     hashed_password = get_password_hash(user_data.password)
 
-    # Auto-generate created_at, updated_at, is_active if None (because on ne demande pas au front 0)
+    # Auto-generate created_at, updated_at, is_active if None 
     now = date.today()  
     user_data_dump = user_data.model_dump(exclude_unset=True)  # (None)
     
-    ## I add this code 
+    
     if 'created_at' not in user_data_dump or user_data_dump['created_at'] is None:
         user_data_dump['created_at'] = now
     if 'updated_at' not in user_data_dump or user_data_dump['updated_at'] is None:
