@@ -20,9 +20,9 @@ services:
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    depends_on:
-      oauth2-proxy-fastapi:
-        condition: service_healthy
+    # depends_on:
+    #   oauth2-proxy-fastapi:
+    #     condition: service_healthy
     environment:
       DB2_USER: ${DB2_USER}
       DB2_HOST: ${DB2_HOST}
