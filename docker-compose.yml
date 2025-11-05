@@ -1,63 +1,49 @@
-# services:
-#   fastapi-app:
-#     image: ejahdilan/fastapi-app:v1
-#     container_name: churn-fastapi-app
-#     restart: always
-#     # env_file:
-#     #   - ./.env
-#     extra_hosts:
-#       - "host.docker.internal:host-gateway"
-#     environment:
-#       DB2_USER: ${DB2_USER}
-#       DB2_HOST: ${DB2_HOST}
-#       DB2_PORT: ${DB2_PORT}
-#       DB2_NAME: ${DB2_NAME}
-#       # DB2_PASS_FILE: /run/secrets/db2_password
-
-#     # secrets:
-#     #   - db2_password
-
-#     ports:
-#       - "8000:8000"
-
-#     # networks:
-#     #   - churnnet
-
-# # secrets:
-# #   db2_password:
-# #     file: /home/churnsvc/mlflow_setup/secrets/db2_pass.txt
-
-# # networks:
-# #   churnnet:
-# #     driver: bridge
-
 services:
+  oauth2-proxy-fastapi:
+    image: ejahdilan/oauthapp-fastapi:v1
+    container_name: oauth2-proxy-fastapi
+    restart: always
+    ports:
+      - "4181:4181"
+    volumes:
+      - /etc/oauth2-proxy-fastapi.cfg:/etc/oauth2-proxy-fastapi.cfg:ro
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:4181/oauth2/health"]
+    #   interval: 20s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 30s
+
   fastapi-app:
     image: ejahdilan/fastapi-app:v1
     container_name: churn-fastapi-app
     restart: always
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      oauth2-proxy-fastapi:
+        condition: service_healthy
     environment:
       DB2_USER: ${DB2_USER}
       DB2_HOST: ${DB2_HOST}
       DB2_PORT: ${DB_PORT}
       DB2_NAME: ${DB2_NAME}
       DB2_PASS: ${DB2_PASS}
-      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_DIR}
+      MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI}
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
     ports:
       - "8000:8000"
     volumes:
-      - /home/churnsvc/mlartifacts:/home/churnsvc/mlartifacts 
-
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
+      - /home/churnsvc/mlartifacts:/home/churnsvc/mlartifacts
+      - ./alembic:/app/alembic 
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    #   interval: 20s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 30s
