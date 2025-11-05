@@ -21,7 +21,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     # depends_on:
-    #   oauth2-proxy-fastapi:
+    #   oauth2-proxy-fastapi:CD D
     #     condition: service_healthy
     environment:
       DB2_USER: ${DB2_USER}
@@ -40,7 +40,7 @@ services:
       - "8000:8000"
     volumes:
       - /home/churnsvc/mlartifacts:/home/churnsvc/mlartifacts
-      - ./alembic:/app/alembic 
+       
     # healthcheck:
     #   test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
     #   interval: 20s
