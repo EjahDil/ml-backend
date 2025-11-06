@@ -13,3 +13,7 @@ python-jose
 pwdlib[argon2]
 PyJWT
 imbalanced-learn
+python-jose[cryptography]
+python-json-logger
+httpx
+pydantic
