@@ -7,17 +7,17 @@ python /app/init_db.py
 # Navigate to app directory
 cd /app
 
-echo "Starting Alembic migrations..."
+# echo "Starting Alembic migrations..."
 
-# Automatically create a revision if needed (optional)
-# This will generate a new migration for any detected model changes
-# Comment out if you only want manual revisions
-alembic revision --autogenerate -m "auto revision" || echo "No changes detected"
+# # Automatically create a revision if needed (optional)
+# # This will generate a new migration for any detected model changes
+# # Comment out if you only want manual revisions
+# alembic revision --autogenerate -m "auto revision" || echo "No changes detected"
 
-# Apply all migrations
-alembic upgrade head
+# # Apply all migrations
+# alembic upgrade head
 
-echo "Migrations applied successfully."
+# echo "Migrations applied successfully."
 
 # Launch FastAPI with Gunicorn + Uvicorn workers
 # - 4 workers (adjust as needed)

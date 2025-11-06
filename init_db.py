@@ -38,12 +38,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_USER = os.getenv("DB2_USER")
-DB_PASS = os.getenv("DB2_PASS")
-DB_HOST = os.getenv("DB2_HOST")
-DB_PORT = os.getenv("DB2_PORT")
+import os
+from pathlib import Path
 
-DEFAULT_DB_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/postgres"
+def read_secret(path: str) -> str | None:
+    p = Path(path)
+    if p.exists():
+        return p.read_text().strip()
+    return None
+
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+
+# secrets (password only stored as docker secret)
+POSTGRES_PASSWORD = read_secret("/run/secrets/postgres_password")
+
+DEFAULT_DB_URL = (
+    f"postgresql+psycopg2://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
+    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/postgres"
+)
 
 def create_database_if_not_exists(new_db_name: str):
     engine = create_engine(DEFAULT_DB_URL, isolation_level="AUTOCOMMIT")
