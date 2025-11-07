@@ -73,4 +73,4 @@ def create_database_if_not_exists(new_db_name: str):
             print(f"Database '{new_db_name}' already exists.")
 
 if __name__ == "__main__":
-    create_database_if_not_exists("telecom_churn")
+    create_database_if_not_exists("churn_db")

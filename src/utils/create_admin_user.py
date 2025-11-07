@@ -76,5 +76,5 @@ def create_default_admin() -> None:
             pass
 
 
-if __name__ == "__main__":
-    create_default_admin()
+# if __name__ == "__main__":
+#     create_default_admin()

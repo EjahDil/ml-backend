@@ -5,7 +5,7 @@ services:
     container_name: churn-postgres-db
     restart: always
     environment:
-      POSTGRES_DB: churn
+      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: /run/secrets/postgres_password
     secrets:
@@ -37,7 +37,7 @@ services:
       postgres:
         condition: service_healthy
     env_file:
-      - .env
+      - ./.env
       # secret values will be read inside app from secrets path at runtime
     secrets:
       - postgres_password
