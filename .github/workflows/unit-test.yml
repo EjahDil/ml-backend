@@ -35,11 +35,5 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Export environment variables from .env.example
-        run: |
-          set -a
-          source .env.example
-          set +a
-
       - name: Run Pytest for backend tests
         run: pytest tests/test_api.py -v
