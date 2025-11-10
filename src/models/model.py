@@ -51,7 +51,7 @@ class Prediction(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: UUID = Field(foreign_key="users.id")
-    model_id: int = Field(foreign_key="mlmodels.id")  # Direct FK to MLModel
+    model_id: Optional[int] = Field(default=None, foreign_key="mlmodels.id", nullable=True)
     input_data: str  # store JSON string of input
     prediction: int
     probability: float
