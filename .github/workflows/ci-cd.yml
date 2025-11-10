@@ -12,7 +12,7 @@ permissions:
 env:
   IMAGE_NAME: ejahdilan/fastapi-app
   COMPOSE_FILE: ./docker-compose.yml 
-  REMOTE_DEPLOY_DIR: /home/churnsvc/churn-app-deploy
+  REMOTE_DEPLOY_DIR: /home/azureuser/churn-app-deploy
   LATEST_TAG: v8
 
 jobs:
