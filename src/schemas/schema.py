@@ -44,9 +44,15 @@ class UserOut(BaseModel):
 
 # Token schemas
 
+class UserLoginResponse(BaseModel):
+    username: str
+    full_name: Optional[str]
+    role: str 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user: UserLoginResponse
 
 class TokenData(BaseModel):
     username: Optional[str] = None
