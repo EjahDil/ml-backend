@@ -48,6 +48,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./training-data:/app/training-data
+      - ./models:/app/models
 
 volumes:
   postgres_data:
