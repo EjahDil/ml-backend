@@ -19,14 +19,14 @@ services:
       timeout: 5s
       retries: 5
 
-  oauth2-proxy-fastapi:
-    image: ejahdilan/oauthapp-fastapi:v1
-    container_name: oauth2-proxy-fastapi
-    restart: always
-    ports:
-      - "4181:4181"
-    volumes:
-      - /etc/oauth2-proxy-fastapi.cfg:/etc/oauth2-proxy-fastapi.cfg:ro
+  # oauth2-proxy-fastapi:
+  #   image: ejahdilan/oauthapp-fastapi:v1
+  #   container_name: oauth2-proxy-fastapi
+  #   restart: always
+  #   ports:
+  #     - "4181:4181"
+  #   volumes:
+  #     - /etc/oauth2-proxy-fastapi.cfg:/etc/oauth2-proxy-fastapi.cfg:ro
 
   fastapi-app:
     image: ejahdilan/fastapi-app:v8
