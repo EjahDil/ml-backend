@@ -7,3 +7,4 @@ reports
 __pycache__/
 secrets
 .pytest_cache/
+training-data

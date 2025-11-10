@@ -3,9 +3,12 @@ from pathlib import Path
 import os
 
 class BlobLoader:
-    def __init__(self):
+    def __init__(self, container_name: str = None):
         self.conn_str = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-        self.container_name = os.environ["AZURE_STORAGE_CONTAINER_NAME"]
+        # Use the passed container_name if given, else fallback to env var
+        self.container_name = container_name or os.environ.get("AZURE_STORAGE_CONTAINER_NAME")
+        if not self.container_name:
+            raise ValueError("Container name must be provided either via argument or AZURE_STORAGE_CONTAINER_NAME env var")
 
         self.client = BlobServiceClient.from_connection_string(self.conn_str)
 
@@ -16,4 +19,3 @@ class BlobLoader:
         with open(local_path, "wb") as f:
             data = blob.download_blob().readall()
             f.write(data)
-        return local_path

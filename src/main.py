@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 import os
+import pandas as pd
 from contextlib import asynccontextmanager
 # from sqlmodel import Session, select
 from db.database import create_db_and_tables
-from controllers.routes import feedback, auth, user
+from controllers.middleware import auth
 from utils.create_admin_user import create_default_admin
-from loaders.model_loader import ModelArtifacts
 
-from controllers.routes import prediction, admin, health_check, users
+from controllers.routes import prediction, admin, health_check, users, feedback
 # from init_db import create_database_if_not_exists
 
 import structlog
@@ -17,7 +17,8 @@ from contextlib import asynccontextmanager
 from controllers.routes.users import router as users_router
 from utils.logging import configure_logging
 from controllers.middleware.middleware import RequestIDMiddleware
-from fastapi.middleware.cors import CORSMiddleware  
+from fastapi.middleware.cors import CORSMiddleware
+from utils.data_fetcher import load_additional_data_with_artifacts 
 
 
 # @app.on_event("startup")
@@ -41,25 +42,18 @@ log = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # --- Startup Block ---
-    # 1) Create DB tables
     create_db_and_tables()
-
-    # 2) Create default admin
     try:
         create_default_admin()
     except Exception as e:
         print("Failed to create default admin:", e)
 
-    # 3) Load model + feature engineering artifacts ONCE
     try:
-        ModelArtifacts.load()
-        print("ML artifacts loaded successfully")
+       load_additional_data_with_artifacts("cell2celltrain.csv")
     except Exception as e:
-        print("Failed loading ML artifacts:", e)
+        print("Failed to download or load training data and ML artifacts:", e)
 
-    yield  # app runs here
-
-
+    yield
 
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
@@ -72,20 +66,6 @@ async def lifespan(app: FastAPI):
 
 #     yield
 
-
-app = FastAPI(title="Churn Prediction API", lifespan=lifespan)
-
-# Register routers
-app.include_router(health_check.router)
-app.include_router(auth.router)
-app.include_router(prediction.router)
-app.include_router(admin.router)
-app.include_router(user.router)
-app.add_middleware(RequestIDMiddleware)
-
-configure_logging(log_level="INFO", json_logs=True)
-
-log = structlog.get_logger()
 
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
@@ -131,7 +111,6 @@ app.add_middleware(RequestIDMiddleware)
 #     yield
 
 # app = FastAPI(lifespan=lifespan)
-
 
 app.add_middleware(
     CORSMiddleware,

@@ -21,7 +21,7 @@ services:
       retries: 5
 
   fastapi-app:
-    image: fastapi-app:v2
+    image: ejahdilan/fastapi-app:v2
     container_name: churn-fastapi-app
     restart: always
     depends_on:
@@ -38,6 +38,9 @@ services:
       - "8000:8000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./training-data:/app/training-data
+
 
 volumes:
   postgres_data:

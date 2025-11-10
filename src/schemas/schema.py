@@ -2,9 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-# --------------------------
 # User schemas
-# --------------------------
 
 class UserBase(BaseModel):
     username: str
@@ -12,7 +10,7 @@ class UserBase(BaseModel):
     full_name: Optional[str] = None
 
 class UserCreate(UserBase):
-    password: str  # only needed during registration
+    password: str  
 
 class User(UserBase):
     disabled: Optional[bool] = None
@@ -27,12 +25,10 @@ class UserOut(BaseModel):
     created_at: Optional[str]
 
     class Config:
-       from_attributes= True  # allow ORM objects (SQLModel) to be returned
+       from_attributes= True 
 
 
-# --------------------------
 # Token schemas
-# --------------------------
 
 class Token(BaseModel):
     access_token: str
@@ -47,7 +43,7 @@ class UserRead(UserBase):
     created_at: datetime
 
     class Config:
-        from_attributes= True  # Enables ORM -> Pydantic conversion
+        from_attributes= True 
 
 class FeedbackCreate(BaseModel):
     prediction_id: int
@@ -64,7 +60,7 @@ class FeedbackRead(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes= True  # allows returning ORM objects directly
+        from_attributes= True
 
 
 class MLModelRead(BaseModel):
@@ -78,9 +74,9 @@ class MLModelRead(BaseModel):
         from_attributes= True
 
 
-# -----------------------------
+
 # Pydantic schema for model creation
-# -----------------------------
+
 class MLModelCreate(BaseModel):
     name: str
     description: Optional[str] = None

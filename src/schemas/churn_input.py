@@ -8,8 +8,6 @@ class ChurnInput(BaseModel):
     CustomerCareCalls: int
     PercChangeMinutes: float
     PercChangeRevenues: float
-    InboundCalls: int
-    OutboundCalls: int
     ReceivedCalls: int
     TotalRecurringCharge: float
     CurrentEquipmentDays: int
@@ -25,3 +23,4 @@ class ChurnInput(BaseModel):
     IncomeGroup: str
     Occupation: str
     PrizmCode: str
+    TotalCalls: int

@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - ci/cd-test
-
 permissions:
   contents: read
   id-token: write
@@ -13,11 +12,7 @@ env:
   IMAGE_NAME: ejahdilan/fastapi-app
   COMPOSE_FILE: ./docker-compose.yml 
   REMOTE_DEPLOY_DIR: /home/churnsvc/churn-app-deploy
-<<<<<<< HEAD
   LATEST_TAG: v8
-=======
-  LATEST_TAG: v1
->>>>>>> main
 
 jobs:
   build-and-push:

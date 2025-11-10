@@ -33,25 +33,6 @@ class User(SQLModel, table=True):
     logs: List["PredictionLog"] = Relationship(back_populates="user")
 
 
-class Prediction(SQLModel, table=True):
-    __tablename__ = "predictions"
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: UUID = Field(foreign_key="users.id")
-    input_data: str  # store JSON string of input
-    prediction: int
-    probability: float
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-    user: Optional[User] = Relationship(back_populates="predictions")
-    prediction_metadata: Optional["PredictionMetadata"] = Relationship(
-        back_populates="prediction",
-        sa_relationship_kwargs={"uselist": False}
-    )
-    feedbacks: List["Feedback"] = Relationship(back_populates="prediction")
-    logs: List["PredictionLog"] = Relationship(back_populates="prediction")
-
-
 class MLModel(SQLModel, table=True):
     __tablename__ = "mlmodels"
 
@@ -61,19 +42,25 @@ class MLModel(SQLModel, table=True):
     description: Optional[str]
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    prediction_metadata: List["PredictionMetadata"] = Relationship(back_populates="model")
+    # Now back_populates from Prediction, one-to-many (a model can be used for many predictions)
+    predictions: List["Prediction"] = Relationship(back_populates="model")
 
 
-class PredictionMetadata(SQLModel, table=True):
-    __tablename__ = "predictionmetadata"
+class Prediction(SQLModel, table=True):
+    __tablename__ = "predictions"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    prediction_id: int = Field(foreign_key="predictions.id", unique=True)
-    model_id: int = Field(foreign_key="mlmodels.id")
+    user_id: UUID = Field(foreign_key="users.id")
+    model_id: int = Field(foreign_key="mlmodels.id")  # Direct FK to MLModel
+    input_data: str  # store JSON string of input
+    prediction: int
+    probability: float
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    prediction: Optional[Prediction] = Relationship(back_populates="prediction_metadata")
-    model: Optional[MLModel] = Relationship(back_populates="prediction_metadata")
+    user: Optional[User] = Relationship(back_populates="predictions")
+    model: Optional[MLModel] = Relationship(back_populates="predictions")
+    feedbacks: List["Feedback"] = Relationship(back_populates="prediction")
+    logs: List["PredictionLog"] = Relationship(back_populates="prediction")
 
 
 class Feedback(SQLModel, table=True):
