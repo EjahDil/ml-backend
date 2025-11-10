@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from datetime import timedelta
 
+from fastapi.security import OAuth2PasswordRequestForm
+
 from models.model import User
 from schemas.schema import UserCreate, Token
 from controllers.middleware.auth import (
@@ -36,18 +38,37 @@ def register(user_data: UserCreate, session: Session = Depends(get_session)):
 
     return {"message": "User registered successfully"}
 
-from fastapi.security import OAuth2PasswordRequestForm
+
+
 
 @router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
-    # form_data is now an instance of OAuth2PasswordRequestForm
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), 
+    session: Session = Depends(get_session)
+):
     user = session.exec(select(User).where(User.username == form_data.username)).first()
+    
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Invalid username or password"
+        )
 
-    access_token_expires = timedelta(minutes=30)
+    # Build access token
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=timedelta(minutes=30)
+        data={"sub": user.username}, 
+        expires_delta=timedelta(minutes=30)
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "is_admin": user.is_admin
+        }
+    }
+
 
