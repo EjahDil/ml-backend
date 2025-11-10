@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, Dict
 from datetime import datetime
 from uuid import UUID
@@ -10,8 +10,20 @@ class UserBase(BaseModel):
     email: Optional[str] = None
     full_name: Optional[str] = None
 
-class UserCreate(UserBase):
-    password: str  
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    confirm_password: str
+    is_admin: bool
+
+    @field_validator("confirm_password")
+    def passwords_match(cls, v, info):
+        password = info.data.get("password")
+        if password != v:
+            raise ValueError("Passwords do not match")
+        return v
+
 
 class User(UserBase):
     disabled: Optional[bool] = None

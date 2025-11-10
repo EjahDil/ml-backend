@@ -15,20 +15,26 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register", response_model=dict)
 def register(user_data: UserCreate, session: Session = Depends(get_session)):
+    # Check if username already exists
     user_exists = session.exec(select(User).where(User.username == user_data.username)).first()
     if user_exists:
-        raise HTTPException(status_code=400, detail="Username already taken")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
+
+    # Map is_admin bool to role string
+    role = "admin" if user_data.is_admin else "user"
 
     new_user = User(
         username=user_data.username,
         email=user_data.email,
         hashed_password=get_password_hash(user_data.password),
+        role=role
     )
+
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
-    return {"message": "User registered successfully"}
 
+    return {"message": "User registered successfully"}
 
 from fastapi.security import OAuth2PasswordRequestForm
 
