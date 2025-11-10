@@ -28,7 +28,6 @@ class User(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
-    predictions: List["Prediction"] = Relationship(back_populates="user")
     feedbacks: List["Feedback"] = Relationship(back_populates="user")
     logs: List["PredictionLog"] = Relationship(back_populates="user")
 
