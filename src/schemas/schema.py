@@ -68,7 +68,7 @@ class FeedbackCreate(BaseModel):
 class FeedbackRead(BaseModel):
     id: int
     prediction_id: int
-    user_id: int
+    user_id: UUID
     correct: Optional[bool]
     comment: Optional[str]
     created_at: datetime
