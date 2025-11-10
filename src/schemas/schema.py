@@ -75,13 +75,9 @@ class MLModelRead(BaseModel):
         from_attributes= True
 
 
-
-class UserProfileResponse(BaseModel):
-    full_name: str
+class UserNameRoleResponse(BaseModel):
+    username: str
     role: str
-
-    class Config:
-         from_attributes= True
 
 
 

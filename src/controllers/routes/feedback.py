@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from typing import List
-from schemas.schema import UserRead, FeedbackRead, FeedbackCreate, User, UserOut, UserProfileResponse
+from schemas.schema import UserRead, FeedbackRead, FeedbackCreate, User, UserOut, UserNameRoleResponse
 from schemas.schema import MLModelRead, MLModelCreate
 from db.database import get_session
 from controllers.middleware.auth import get_current_user
 from models.model import Feedback, MLModel, PredictionLog, UserRole
+from models.model import User as UserModel
 import mlflow
 import os
 
@@ -13,9 +14,12 @@ router = APIRouter(prefix="/api", tags=["Telecom Churn"])
 
 # USERS
 
-@router.get("/users/me", response_model=UserProfileResponse)
+@router.get("/users/me", response_model=UserNameRoleResponse)
 def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+    return UserNameRoleResponse(
+        username=current_user.username,
+        role=current_user.role.value if hasattr(current_user.role, "value") else current_user.role
+    )
 
 # Admin-only users listing
 
@@ -35,7 +39,7 @@ def list_users(
         )
 
     # Fetch all users
-    users = session.exec(select(User)).all()
+    users = session.exec(select(UserModel)).all()
     return users
 
 
