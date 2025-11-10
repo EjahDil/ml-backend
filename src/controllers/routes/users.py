@@ -40,19 +40,43 @@ def register(user_data: UserCreate, session: Session = Depends(get_session)):
 
 
 
+# @router.post("/login", response_model=Token)
+# def login(
+#     form_data: OAuth2PasswordRequestForm = Depends(), 
+#     session: Session = Depends(get_session)
+# ):
+#     user = session.exec(select(User).where(User.username == form_data.username)).first()
+    
+#     if not user or not verify_password(form_data.password, user.hashed_password):
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED, 
+#             detail="Invalid username or password"
+#         )
+
+#     # Build access token
+#     access_token = create_access_token(
+#         data={"sub": user.username}, 
+#         expires_delta=timedelta(minutes=30)
+#     )
+
+#     return {
+#         "access_token": access_token,
+#         "token_type": "bearer",
+#         "user": {
+#             "id": user.id,
+#             "username": user.username,
+#             "email": user.email,
+#             "is_admin": user.is_admin
+#         }
+#     }
+
 
 @router.post("/login", response_model=Token)
-def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), 
-    session: Session = Depends(get_session)
-):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
     user = session.exec(select(User).where(User.username == form_data.username)).first()
-    
+
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Invalid username or password"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
 
     # Build access token
     access_token = create_access_token(
@@ -64,11 +88,8 @@ def login(
         "access_token": access_token,
         "token_type": "bearer",
         "user": {
-            "id": user.id,
             "username": user.username,
-            "email": user.email,
-            "is_admin": user.is_admin
+            "full_name": user.full_name,
+            "role": user.role.value
         }
     }
-
-
