@@ -50,17 +50,18 @@ class Prediction(SQLModel, table=True):
     __tablename__ = "predictions"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: UUID = Field(foreign_key="users.id")
+    external_customer_id: Optional[int] = Field(default=None, index=True, nullable=True)
     model_id: Optional[int] = Field(default=None, foreign_key="mlmodels.id", nullable=True)
-    input_data: str  # store JSON string of input
+    input_data: str 
     prediction: int
     probability: float
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    user: Optional[User] = Relationship(back_populates="predictions")
+    # No user relation
     model: Optional[MLModel] = Relationship(back_populates="predictions")
     feedbacks: List["Feedback"] = Relationship(back_populates="prediction")
     logs: List["PredictionLog"] = Relationship(back_populates="prediction")
+
 
 
 class Feedback(SQLModel, table=True):

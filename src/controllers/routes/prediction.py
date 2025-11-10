@@ -4,12 +4,11 @@ from sqlmodel import Session, select
 from schemas.churn_input import ChurnInput
 from models.model import User, Prediction, PredictionLog
 from controllers.middleware.auth import get_current_user, get_session
-from schemas.schema import PredictionRead
+from schemas.schema import PredictionRead, PredictionRequest
 from typing import List
 from loaders.model_loader import ModelArtifacts
 
 router = APIRouter(prefix="/predict", tags=["Prediction"])
-
 
 ### Optimized prediction endpoint
 @router.post("/", summary="Predict Customer Churn", response_model=dict)
@@ -70,6 +69,48 @@ def predict_churn(
         "prediction_id": prediction_record.id,
         "model_version": ModelArtifacts.version
     }
+
+
+
+@router.post("/predict-from-call-session/", summary="Predict churn from call session data")
+def predict_from_call_session(
+    request: PredictionRequest,
+    session: Session = Depends(get_session)
+):
+    # Extract external_customer_id from request data
+    external_customer_id = request.data.get("customer_id")
+    if external_customer_id is None:
+        raise HTTPException(status_code=400, detail="Missing customer_id")
+
+    # If user_id is passed, convert, else set None
+    # user_id_str = request.current_user.get("id") if request.current_user else None
+    # user_id = UUID(user_id_str) if user_id_str else None
+
+    # Data for prediction
+    df = pd.DataFrame([request.data])
+
+    X = ModelArtifacts.fe.transform(df)
+    y_pred = ModelArtifacts.model.predict(X)[0]
+    prob = float(ModelArtifacts.model.predict_proba(X)[0, 1])
+
+    prediction_record = Prediction(
+        external_customer_id=external_customer_id,
+        input_data=df.to_json(),
+        prediction=int(y_pred),
+        probability=prob
+    )
+    session.add(prediction_record)
+    session.commit()
+    session.refresh(prediction_record)
+
+    return {
+        "external_customer_id": external_customer_id,
+        "prediction": int(y_pred),
+        "probability": prob,
+        "prediction_id": prediction_record.id,
+        "model_version": ModelArtifacts.version
+    }
+
 
 
 # Endpoint to list all predictions

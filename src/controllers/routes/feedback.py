@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from typing import List
-from schemas.schema import UserRead, FeedbackRead, FeedbackCreate, User, UserOut
+from schemas.schema import UserRead, FeedbackRead, FeedbackCreate, User, UserOut, UserProfileResponse
 from schemas.schema import MLModelRead, MLModelCreate
 from db.database import get_session
 from controllers.middleware.auth import get_current_user
@@ -13,9 +13,8 @@ router = APIRouter(prefix="/api", tags=["Telecom Churn"])
 
 # USERS
 
-@router.get("/users/me", response_model=UserRead)
+@router.get("/users/me", response_model=UserProfileResponse)
 def get_me(current_user: User = Depends(get_current_user)):
-    """Get the current authenticated user's profile"""
     return current_user
 
 # Admin-only users listing
@@ -29,8 +28,7 @@ def list_users(
     List all users — Admin access only
     """
     # Check if the current user has an admin role
-    roles = [ur.role.name for ur in current_user.roles]
-    if "admin" not in roles:
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
@@ -39,6 +37,7 @@ def list_users(
     # Fetch all users
     users = session.exec(select(User)).all()
     return users
+
 
 
 # FEEDBACK

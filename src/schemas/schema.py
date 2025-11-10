@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
+from uuid import UUID
 
 # User schemas
 
@@ -39,7 +40,7 @@ class TokenData(BaseModel):
 
 
 class UserRead(UserBase):
-    id: int
+    id: UUID
     created_at: datetime
 
     class Config:
@@ -75,6 +76,15 @@ class MLModelRead(BaseModel):
 
 
 
+class UserProfileResponse(BaseModel):
+    full_name: str
+    role: str
+
+    class Config:
+         from_attributes= True
+
+
+
 # Pydantic schema for model creation
 
 class MLModelCreate(BaseModel):
@@ -91,3 +101,11 @@ class PredictionRead(BaseModel):
 
     class Config:
         from_attributes= True
+
+
+class CurrentUser(BaseModel):
+    id: Optional[str] = None
+
+class PredictionRequest(BaseModel):
+    data: Dict
+    current_user: Optional[CurrentUser] = None
