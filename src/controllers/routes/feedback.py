@@ -79,25 +79,17 @@ def list_feedback(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    List all feedback submitted by any user.
-    Only admin users can access this endpoint.
-    """
-    # Check if the current user has admin role
-    roles = [ur.role.name for ur in current_user.roles]  # ur = UserRole instance
-    if "admin" not in roles:
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
         )
-
-    # Fetch all feedback entries
     feedbacks = session.exec(select(Feedback)).all()
     return feedbacks
 
 
-# Admin-only endpoint
 
+# Admin-only endpoint
 @router.get("/models/", response_model=List[MLModelRead])
 def list_models(
     session: Session = Depends(get_session),
@@ -108,8 +100,7 @@ def list_models(
     Only admin users can access this endpoint.
     """
     # Check if the current user has admin role
-    roles = [ur.role.name for ur in current_user.roles]  # ur = UserRole instance
-    if "admin" not in roles:
+    if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
@@ -123,59 +114,59 @@ def list_models(
 
 # Model creation with MLflow load (no admin check)
 
-@router.post("/models/", response_model=MLModelRead)
-def create_model(
-    model_in: MLModelCreate,
-    session: Session = Depends(get_session)
-):
-    """
-    Register a new ML model in the database.
-    Automatically loads the latest version from MLflow using the sklearn flavor (Endpoint to be modified)
-    """
+# @router.post("/models/", response_model=MLModelRead)
+# def create_model(
+#     model_in: MLModelCreate,
+#     session: Session = Depends(get_session)
+# ):
+#     """
+#     Register a new ML model in the database.
+#     Automatically loads the latest version from MLflow using the sklearn flavor (Endpoint to be modified)
+#     """
 
-    # MLflow setup
-    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    MLFLOW_TRACKING_URI = f"file://{os.path.join(BASE_DIR, 'mlruns')}"
-    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+#     # MLflow setup
+#     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+#     MLFLOW_TRACKING_URI = f"file://{os.path.join(BASE_DIR, 'mlruns')}"
+#     mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 
-    # Get latest model version
-    try:
-        latest_version_info = mlflow.client.MlflowClient().get_latest_versions(
-            model_in.name, stages=["None", "Production", "Staging"]
-        )
-        if not latest_version_info:
-            raise HTTPException(
-                status_code=400,
-                detail=f"No MLflow model found for name: {model_in.name}"
-            )
-        latest_version = max(int(v.version) for v in latest_version_info)
-        model_uri = f"models:/{model_in.name}/{latest_version}"
-    except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Error retrieving MLflow model: {str(e)}"
-        )
+#     # Get latest model version
+#     try:
+#         latest_version_info = mlflow.client.MlflowClient().get_latest_versions(
+#             model_in.name, stages=["None", "Production", "Staging"]
+#         )
+#         if not latest_version_info:
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail=f"No MLflow model found for name: {model_in.name}"
+#             )
+#         latest_version = max(int(v.version) for v in latest_version_info)
+#         model_uri = f"models:/{model_in.name}/{latest_version}"
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=400,
+#             detail=f"Error retrieving MLflow model: {str(e)}"
+#         )
 
-    #  Load MLflow model (sklearn flavor)
-    try:
-        model = mlflow.sklearn.load_model(model_uri)
-    except Exception as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Failed to load MLflow model: {str(e)}"
-        )
+#     #  Load MLflow model (sklearn flavor)
+#     try:
+#         model = mlflow.sklearn.load_model(model_uri)
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=400,
+#             detail=f"Failed to load MLflow model: {str(e)}"
+#         )
 
-    #  Save model metadata in DB
-    db_model = MLModel(
-        name=model_in.name,
-        version=str(latest_version),
-        description=model_in.description
-    )
-    session.add(db_model)
-    session.commit()
-    session.refresh(db_model)
+#     #  Save model metadata in DB
+#     db_model = MLModel(
+#         name=model_in.name,
+#         version=str(latest_version),
+#         description=model_in.description
+#     )
+#     session.add(db_model)
+#     session.commit()
+#     session.refresh(db_model)
 
-    return db_model
+#     return db_model
 
 
 @router.get("/logs/", response_model=List[PredictionLog])
