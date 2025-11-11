@@ -15,7 +15,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     confirm_password: str
-    is_admin: bool
+    # is_admin: bool
 
     @field_validator("confirm_password")
     def passwords_match(cls, v, info):
