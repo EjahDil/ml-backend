@@ -23,7 +23,10 @@ def register(user_data: UserCreate, session: Session = Depends(get_session)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
 
     # Map is_admin bool to role string
-    role = "admin" if user_data.is_admin else "user"
+    # role = "admin" if user_data.is_admin else "user"
+
+    # Always assign role as "user" regardless of user_data input
+    role = "user"
 
     new_user = User(
         username=user_data.username,
