@@ -95,10 +95,11 @@ app = FastAPI(title="Churn Prediction API", lifespan=lifespan)
 
 # PROMETHEUS METRICS INSTRUMENTATION 
 instrumentator = Instrumentator(
-    should_group_status_codes=True,    # group 2xx, 4xx, etc.
-    should_ignore_untemplated=True,    # ignore /users/123 style routes
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
 )
 
+instrumentator.instrument(app).expose(app)
 
 
 # Register routers

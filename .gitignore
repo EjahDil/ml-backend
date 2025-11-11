@@ -9,3 +9,4 @@ secrets
 .pytest_cache/
 training-data
 models
+prometheus.yml
