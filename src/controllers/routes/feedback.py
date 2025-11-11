@@ -90,25 +90,25 @@ def list_feedback(
 
 
 # Admin-only endpoint
-@router.get("/models/", response_model=List[MLModelRead])
-def list_models(
-    session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    List all ML models.
-    Only admin users can access this endpoint.
-    """
-    # Check if the current user has admin role
-    if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required"
-        )
+# @router.get("/models/", response_model=List[MLModelRead])
+# def list_models(
+#     session: Session = Depends(get_session),
+#     current_user: User = Depends(get_current_user)
+# ):
+#     """
+#     List all ML models.
+#     Only admin users can access this endpoint.
+#     """
+#     # Check if the current user has admin role
+#     if current_user.role != "admin":
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Admin access required"
+#         )
 
-    # Fetch all ML models
-    models = session.exec(select(MLModel)).all()
-    return models
+#     # Fetch all ML models
+#     models = session.exec(select(MLModel)).all()
+#     return models
 
 
 

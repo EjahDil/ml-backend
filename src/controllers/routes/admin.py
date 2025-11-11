@@ -17,9 +17,11 @@ def create_admin_user(
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Access forbidden: Admins only")
 
-    # Check if username already exists
     user_exists = session.exec(
-        select(User).where(User.username == user_in.username)).first()
+        select(User).where(
+            (User.username == user_in.username) | (User.email == user_in.email)
+        )
+    ).first()
 
     if user_exists:
         raise HTTPException(status_code=400, detail="Username or email already exists")

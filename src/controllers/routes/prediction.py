@@ -59,6 +59,7 @@ def predict_churn(
         request_ip=request.client.host if request else None,
         user_agent=request.headers.get("user-agent") if request else None
     )
+    
     session.add(log_record)
     session.commit()
 
