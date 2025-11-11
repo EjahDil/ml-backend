@@ -11,6 +11,7 @@ from controllers.routes import prediction, admin, health_check, users, feedback
 # from init_db import create_database_if_not_exists
 
 import structlog
+from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 # from db.database import engine,Base
@@ -91,6 +92,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Churn Prediction API", lifespan=lifespan)
+
+# PROMETHEUS METRICS INSTRUMENTATION 
+instrumentator = Instrumentator(
+    should_group_status_codes=True,    # group 2xx, 4xx, etc.
+    should_ignore_untemplated=True,    # ignore /users/123 style routes
+)
+
+
 
 # Register routers
 app.include_router(health_check.router)

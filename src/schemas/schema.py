@@ -122,5 +122,6 @@ class CurrentUser(BaseModel):
     id: Optional[str] = None
 
 class PredictionRequest(BaseModel):
+    customer_id: str
     data: Dict
     current_user: Optional[CurrentUser] = None

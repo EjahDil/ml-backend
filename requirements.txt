@@ -20,3 +20,5 @@ httpx
 pydantic
 pytest
 azure-storage-blob
+prometheus-client 
+prometheus-fastapi-instrumentator

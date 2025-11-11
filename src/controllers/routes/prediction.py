@@ -78,7 +78,8 @@ def predict_from_call_session(
     session: Session = Depends(get_session)
 ):
     # Extract external_customer_id from request data
-    external_customer_id = request.data.get("customer_id")
+    external_customer_id = request.customer_id
+
     if external_customer_id is None:
         raise HTTPException(status_code=400, detail="Missing customer_id")
 
