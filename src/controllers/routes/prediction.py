@@ -13,6 +13,8 @@ from utils.get_model import get_model_instance
 
 router = APIRouter(prefix="/predict", tags=["Prediction"])
 
+
+
 ### Optimized prediction endpoint
 @router.post("/", summary="Predict Customer Churn", response_model=dict)
 def predict_churn(
@@ -29,11 +31,12 @@ def predict_churn(
     if not ModelArtifacts.models or ModelArtifacts.model_name is None:
         raise HTTPException(status_code=500, detail="Model is not loaded")
 
-    model_id = ModelArtifacts.model_name
-    model = ModelArtifacts.models.get(model_id)
+    # model_id = ModelArtifacts.model_name
+    
+    model = ModelArtifacts.model
 
     if model is None:
-        raise HTTPException(status_code=500, detail=f"Model '{model_id}' not found")
+        raise HTTPException(status_code=500, detail="Model not found")
 
     # Transform input features using feature engineering
     X = ModelArtifacts.fe.transform(df)
@@ -43,20 +46,20 @@ def predict_churn(
     prob = float(model.predict_proba(X)[0, 1])
 
     # Try to find the MLModel record by model name (model_id)
-    model_record = session.exec(
-        select(MLModel).where(MLModel.name == model_id)
-    ).first()
+    # model_record = session.exec(
+    #     select(MLModel).where(MLModel.name == model_id)
+    # ).first()
 
-    # If not found, create it
-    if not model_record:
-        model_record = MLModel(
-            name=model_id,
-            version="unknown",
-            description=f"Auto-created record for model {model_id}"
-        )
-        session.add(model_record)
-        session.commit()
-        session.refresh(model_record)
+    # # If not found, create it
+    # if not model_record:
+    #     model_record = MLModel(
+    #         name=model_id,
+    #         version="unknown",
+    #         description=f"Auto-created record for model {model_id}"
+    #     )
+        # session.add(model_record)
+        # session.commit()
+        # session.refresh(model_record)
 
     # Store prediction with the model_id foreign key
     prediction_record = Prediction(
@@ -64,7 +67,7 @@ def predict_churn(
         input_data=df.to_json(),
         prediction=int(y_pred),
         probability=prob,
-        model_id=model_record.id
+        #model_id=model_record.id
     )
 
     session.add(prediction_record)
@@ -85,8 +88,7 @@ def predict_churn(
         "user": current_user.username,
         "prediction": int(y_pred),
         "probability": prob,
-        "prediction_id": prediction_record.id,
-        "model_version": model_id
+        "prediction_id": prediction_record.id
     }
 
 
