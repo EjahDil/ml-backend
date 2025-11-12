@@ -126,7 +126,7 @@ model_params:
 
 mlflow:
     tracking_uri: "http://mlflow-server:5000"
-    experiment_name: "model_comparison_v1"
+    experiment_name: "model_comparison"
     run_name: "model_comparison"
 
 monitoring:

@@ -8,6 +8,7 @@ from schemas.schema import PredictionRead, PredictionRequest
 from typing import List
 from loaders.model_loader import ModelArtifacts
 from sqlmodel import delete
+from utils.get_model import get_model_instance
 
 
 router = APIRouter(prefix="/predict", tags=["Prediction"])
@@ -127,6 +128,79 @@ def predict_from_call_session(
         "prediction_id": prediction_record.id,
         "model_version": ModelArtifacts.version
     }
+
+
+
+### Optimized prediction endpoint
+@router.post("/best_model", summary="Predict Customer Churn", response_model=dict)
+def predict_churn(
+    data: ChurnInput,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+    request: Request = None
+):
+    print(f"Prediction request made by user: {current_user.username}")
+
+    df = pd.DataFrame([data.model_dump()])
+
+    # Load model singleton
+    model = get_model_instance()
+    if model is None:
+        raise HTTPException(status_code=500, detail="Model not loaded")
+
+    # Predict directly, assuming model includes all preprocessing
+    y_pred = model.predict(df)[0]
+    prob = float(model.predict_proba(df)[0, 1])
+
+    # Save or get MLModel record
+    latest_model_id = "best_model"  # or extract model version from MLflow run info if needed
+    model_record = session.exec(
+        select(MLModel).where(MLModel.name == latest_model_id)
+    ).first()
+
+    if not model_record:
+        model_record = MLModel(
+            name=latest_model_id,
+            version="unknown",
+            description=f"Auto-created record for model {latest_model_id}"
+        )
+        session.add(model_record)
+        session.commit()
+        session.refresh(model_record)
+
+    prediction_record = Prediction(
+        user_id=current_user.id,
+        input_data=df.to_json(),
+        prediction=int(y_pred),
+        probability=prob,
+        model_id=model_record.id
+    )
+    session.add(prediction_record)
+    session.commit()
+    session.refresh(prediction_record)
+
+    log_record = PredictionLog(
+        prediction_id=prediction_record.id,
+        user_id=current_user.id,
+        request_ip=request.client.host if request else None,
+        user_agent=request.headers.get("user-agent") if request else None
+    )
+    session.add(log_record)
+    session.commit()
+
+    return {
+        "user": current_user.username,
+        "prediction": int(y_pred),
+        "probability": prob,
+        "prediction_id": prediction_record.id,
+        "model_version": latest_model_id
+    }
+
+
+
+
+
+
 
 
 

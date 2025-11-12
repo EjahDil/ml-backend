@@ -124,6 +124,7 @@ class ModelArtifacts:
         for model_file in latest_models:
             # Extract model_id from filename
             model_id = model_file.stem.replace("_model", "")
+            
             cls.models[model_id] = joblib.load(model_file)
 
         # Load FE config (same for all models, adjust if needed)
