@@ -49,10 +49,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print("Failed to create default admin:", e)
 
-    try:
-       load_data_and_models("cell2celltrain.csv")
-    except Exception as e:
-        print("Failed to download or load training data and ML artifacts:", e)
+    # try:
+    #    load_data_and_models("cell2celltrain.csv")
+    # except Exception as e:
+    #     print("Failed to download or load training data and ML artifacts:", e)
 
     yield
 
