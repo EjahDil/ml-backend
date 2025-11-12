@@ -215,28 +215,21 @@ class ModelArtifacts:
     @classmethod
     def load(cls, train_df: pd.DataFrame, models_dir: str = "./models"):
         """
-        Load a specific hardcoded model and initialize feature engineering.
+        Load the hardcoded model 'model.pkl' and initialize feature engineering.
         """
 
         if cls.models and cls.fe:
             return
 
         models_path = Path(models_dir)
-
-        # Hardcoded model filename for troubleshooting
-        hardcoded_model_filename = "m-61620ec1ceb04f79a5557f34c07a2275_model.pkl"
-        model_file = models_path / hardcoded_model_filename
+        model_file = models_path / "model.pkl"
 
         if not model_file.exists():
             raise FileNotFoundError(f"Model file not found: {model_file}")
 
-        # Extract model ID using regex
-        match = re.search(r"([^/\\]+)_model\.pkl$", model_file.name)
-        model_id = match.group(1) if match else model_file.stem
-
-        # Load the model directly using model_id as key
-        cls.models[model_id] = joblib.load(model_file)
-        cls.model_name = model_id
+        # Use a fixed key 'model' since the filename is fixed
+        cls.models["model"] = joblib.load(model_file)
+        cls.model_name = "model"
 
         # Load config file
         BASE_DIR = Path(__file__).resolve().parent.parent
@@ -252,5 +245,7 @@ class ModelArtifacts:
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
         cls.fe.fit(train_df)
 
-        print(f"Successfully loaded model: {model_id} ({model_file.name})")
+        print(f"Successfully loaded model: model ({model_file.name})")
+
+
 

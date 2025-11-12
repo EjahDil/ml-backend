@@ -25,31 +25,34 @@ def predict_churn(
 
     df = pd.DataFrame([data.model_dump()])
 
-    # Check if models are loaded and pick the latest model
-    if not ModelArtifacts.models or not ModelArtifacts.model_names:
-        raise HTTPException(status_code=500, detail="Models are not loaded")
+    # Check if model is loaded
+    if not ModelArtifacts.models or ModelArtifacts.model_name is None:
+        raise HTTPException(status_code=500, detail="Model is not loaded")
 
-    latest_model_id = ModelArtifacts.model_names[0]
-    latest_model = ModelArtifacts.models[latest_model_id]
+    model_id = ModelArtifacts.model_name
+    model = ModelArtifacts.models.get(model_id)
 
-    # Transform input features
+    if model is None:
+        raise HTTPException(status_code=500, detail=f"Model '{model_id}' not found")
+
+    # Transform input features using feature engineering
     X = ModelArtifacts.fe.transform(df)
 
-    # Predict using the latest model
-    y_pred = latest_model.predict(X)[0]
-    prob = float(latest_model.predict_proba(X)[0, 1])
+    # Predict using the loaded model
+    y_pred = model.predict(X)[0]
+    prob = float(model.predict_proba(X)[0, 1])
 
-    # Try to find the MLModel record by model name (latest_model_id)
+    # Try to find the MLModel record by model name (model_id)
     model_record = session.exec(
-        select(MLModel).where(MLModel.name == latest_model_id)
+        select(MLModel).where(MLModel.name == model_id)
     ).first()
 
     # If not found, create it
     if not model_record:
         model_record = MLModel(
-            name=latest_model_id,
+            name=model_id,
             version="unknown",
-            description=f"Auto-created record for model {latest_model_id}"
+            description=f"Auto-created record for model {model_id}"
         )
         session.add(model_record)
         session.commit()
@@ -83,7 +86,7 @@ def predict_churn(
         "prediction": int(y_pred),
         "probability": prob,
         "prediction_id": prediction_record.id,
-        "model_version": latest_model_id
+        "model_version": model_id
     }
 
 
@@ -196,7 +199,6 @@ def predict_churn(
         "prediction_id": prediction_record.id,
         "model_version": latest_model_id
     }
-
 
 
 
