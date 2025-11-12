@@ -6,11 +6,6 @@ from azure.storage.blob import BlobServiceClient
 
 load_dotenv()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(BASE_DIR, "config", "config.yaml")
-
-loader = ModelLoader(config_path=config_path)
-
 # Singleton pattern to load model once
 _model_instance = None
 
@@ -30,6 +25,6 @@ def get_model_instance():
         url = f"https://{account_name}.blob.core.windows.net"
         service = BlobServiceClient(account_url=url, credential=account_key)
 
-        loader = ModelLoader(config_path=config_path)
+        loader = ModelLoader(config_path="/app/src/config/config.yaml")
         _model_instance = loader.load_latest_best_model()
     return _model_instance
