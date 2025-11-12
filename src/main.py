@@ -19,8 +19,6 @@ from controllers.routes.users import router as users_router
 from utils.logging import configure_logging
 from controllers.middleware.middleware import RequestIDMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from utils.data_fetcher import load_data_and_models
-
 
 # @app.on_event("startup")
 # def on_startup():
