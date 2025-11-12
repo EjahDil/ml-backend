@@ -218,7 +218,7 @@ class ModelArtifacts:
         Load the hardcoded model 'model.pkl' and initialize feature engineering.
         """
 
-        if cls.models and cls.fe:
+        if cls.model and cls.fe:
             return
 
         models_path = Path(models_dir)
@@ -228,7 +228,7 @@ class ModelArtifacts:
             raise FileNotFoundError(f"Model file not found: {model_file}")
 
         # Use a fixed key 'model' since the filename is fixed
-        cls.models["model"] = joblib.load(model_file)
+        cls.model = joblib.load(model_file)
         cls.model_name = "model"
 
         # Load config file
@@ -243,9 +243,10 @@ class ModelArtifacts:
 
         # Initialize and fit feature engineering
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
+
         cls.fe.fit(train_df)
 
-        print(f"Successfully loaded model: model ({model_file.name})")
+        print(f"Successfully loaded model: model")
 
 
 

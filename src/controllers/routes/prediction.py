@@ -91,7 +91,6 @@ def predict_churn(
 
 
 
-
 @router.post("/predict-from-call-session/", summary="Predict churn from call session data")
 def predict_from_call_session(
     request: PredictionRequest,
