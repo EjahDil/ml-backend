@@ -19,7 +19,7 @@ from controllers.routes.users import router as users_router
 from utils.logging import configure_logging
 from controllers.middleware.middleware import RequestIDMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from utils.data_fetcher import load_additional_data_with_artifacts 
+from utils.data_fetcher import load_data_and_models
 
 
 # @app.on_event("startup")
@@ -50,7 +50,7 @@ async def lifespan(app: FastAPI):
         print("Failed to create default admin:", e)
 
     try:
-       load_additional_data_with_artifacts("cell2celltrain.csv")
+       load_data_and_models("cell2celltrain.csv")
     except Exception as e:
         print("Failed to download or load training data and ML artifacts:", e)
 
