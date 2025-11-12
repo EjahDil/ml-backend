@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 import pandas as pd
 from sqlmodel import Session, select
 from schemas.churn_input import ChurnInput
-from models.model import User, Prediction, PredictionLog, Feedback
+from models.model import User, Prediction, PredictionLog, Feedback, MLModel
 from controllers.middleware.auth import get_current_user, get_session
 from schemas.schema import PredictionRead, PredictionRequest
 from typing import List
@@ -24,44 +24,56 @@ def predict_churn(
 
     df = pd.DataFrame([data.model_dump()])
 
-    # Now transform
+    # Check if models are loaded and pick the latest model
+    if not ModelArtifacts.models or not ModelArtifacts.model_names:
+        raise HTTPException(status_code=500, detail="Models are not loaded")
+
+    latest_model_id = ModelArtifacts.model_names[0]
+    latest_model = ModelArtifacts.models[latest_model_id]
+
+    # Transform input features
     X = ModelArtifacts.fe.transform(df)
 
+    # Predict using the latest model
+    y_pred = latest_model.predict(X)[0]
+    prob = float(latest_model.predict_proba(X)[0, 1])
 
-    y_pred = ModelArtifacts.model.predict(X)[0]
-    prob = float(ModelArtifacts.model.predict_proba(X)[0, 1])
+    # Try to find the MLModel record by model name (latest_model_id)
+    model_record = session.exec(
+        select(MLModel).where(MLModel.name == latest_model_id)
+    ).first()
 
-    # store prediction + metadata + log exactly same as before
+    # If not found, create it
+    if not model_record:
+        model_record = MLModel(
+            name=latest_model_id,
+            version="unknown",
+            description=f"Auto-created record for model {latest_model_id}"
+        )
+        session.add(model_record)
+        session.commit()
+        session.refresh(model_record)
+
+    # Store prediction with the model_id foreign key
     prediction_record = Prediction(
         user_id=current_user.id,
         input_data=df.to_json(),
         prediction=int(y_pred),
-        probability=prob
+        probability=prob,
+        model_id=model_record.id
     )
+
     session.add(prediction_record)
     session.commit()
     session.refresh(prediction_record)
 
-    # model_record = session.exec(
-    # select(MLModel)
-    # .where(MLModel.name == ModelArtifacts.model_name)
-    # .where(MLModel.version == ModelArtifacts.version)
-    # ).first()
-
-    # metadata_record = PredictionMetadata(
-    #     prediction_id=prediction_record.id,
-    #     #model_id=model_record.id
-    # )
-    # session.add(metadata_record)
-    # session.commit()
-
+    # Log prediction request metadata
     log_record = PredictionLog(
         prediction_id=prediction_record.id,
         user_id=current_user.id,
         request_ip=request.client.host if request else None,
         user_agent=request.headers.get("user-agent") if request else None
     )
-    
     session.add(log_record)
     session.commit()
 
@@ -70,8 +82,9 @@ def predict_churn(
         "prediction": int(y_pred),
         "probability": prob,
         "prediction_id": prediction_record.id,
-        "model_version": ModelArtifacts.version
+        "model_version": latest_model_id
     }
+
 
 
 

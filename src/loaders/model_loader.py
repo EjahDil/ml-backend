@@ -43,31 +43,46 @@
 
 import joblib
 from pathlib import Path
-from .blob_loader import BlobLoader
 from ml.feature_engineering import FeatureEngineering
-import os
+# import os
 import yaml
-from dotenv import load_dotenv
 import pandas as pd
 
-load_dotenv()
+from pathlib import Path
+import joblib
+import yaml
+import pandas as pd
 
 class ModelArtifacts:
-    model = None
+    models = {}  # dictionary: model_id -> model object
     fe = None
-    model_name = None
-    version = None
+    model_names = []  # list of loaded model IDs (optional)
 
     @classmethod
-    def load(cls, train_df: pd.DataFrame):
-        if cls.model and cls.fe:
-            return
+    def load(cls, train_df: pd.DataFrame, models_dir: str = "./models", num_models: int = 2):
+        if cls.models and cls.fe:
+            return  # already loaded
 
-        # ALWAYS load model locally from project models dir
-        local_model = Path("./models/model.pkl")
-        cls.model = joblib.load(local_model)
+        models_path = Path(models_dir)
 
-        # Load FE config
+        # Find all model files matching pattern *_model.pkl
+        model_files = list(models_path.glob("*_model.pkl"))
+        if not model_files:
+            raise FileNotFoundError(f"No model files found in {models_dir}")
+
+        # Sort by modification time descending (latest first)
+        model_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+        # Pick up to num_models latest files
+        latest_models = model_files[:num_models]
+
+        # Load models
+        for model_file in latest_models:
+            # Extract model_id from filename
+            model_id = model_file.stem.replace("_model", "")
+            cls.models[model_id] = joblib.load(model_file)
+
+        # Load FE config (same for all models, adjust if needed)
         BASE_DIR = Path(__file__).resolve().parent.parent
         CONFIG_FILE = BASE_DIR / "config" / "config.yaml"
         with open(CONFIG_FILE, "r") as f:
@@ -75,7 +90,10 @@ class ModelArtifacts:
 
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
 
-        # Fit FE on training df
+        # Fit FE on training df (once)
         cls.fe.fit(train_df)
+
+        # Keep track of loaded model IDs
+        cls.model_names = list(cls.models.keys())
 
 
