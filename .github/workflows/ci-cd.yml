@@ -142,14 +142,14 @@ jobs:
             blob_service_client = BlobServiceClient.from_connection_string(conn_str)
             container_client = blob_service_client.get_container_client(container_name)
 
-            # blobs = [b for b in container_client.list_blobs() if b.name.endswith("model.pkl")]
+            blobs = [b for b in container_client.list_blobs() if b.name.endswith("model.pkl")]
 
-            blobs = [
-                      b for b in container_client.list_blobs()
-                      if b.name.endswith("model.pkl")
-                      and len(b.name.split('/')) > 1
-                      and b.name.split('/')[1].startswith('1')
-                    ]
+            # blobs = [
+            #           b for b in container_client.list_blobs()
+            #           if b.name.endswith("model.pkl")
+            #           and len(b.name.split('/')) > 1
+            #           and b.name.split('/')[1].startswith('1')
+            #         ]
             
             if not blobs:
                 raise SystemExit("No model.pkl found in container.")
