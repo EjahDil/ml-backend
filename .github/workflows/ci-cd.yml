@@ -162,7 +162,7 @@ jobs:
 
             blobs.sort(key=lambda b: b.last_modified)
 
-            latest_blobs = blobs[-2:]
+            latest_blobs = blobs[:2]
 
             for latest_blob in latest_blobs:
 
