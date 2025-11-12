@@ -223,9 +223,6 @@ class ModelArtifacts:
         if not model_file.exists():
             raise FileNotFoundError(f"Model file not found: {model_file}")
 
-        cls.model = joblib.load(model_file)
-        cls.model_name = "model"
-
         BASE_DIR = Path(__file__).resolve().parent.parent
         config_file = BASE_DIR / "config" / "config.yaml"
 
@@ -237,6 +234,9 @@ class ModelArtifacts:
 
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
         cls.fe.fit(train_df)
+
+        cls.model = joblib.load(model_file)
+        cls.model_name = "model"
 
         print(f"Successfully loaded model: model")
 
