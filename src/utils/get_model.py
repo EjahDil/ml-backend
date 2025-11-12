@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
-from loaders.model_loader import ModelLoader
+# from loaders.model_loader import ModelArtifacts
 from azure.storage.blob import BlobServiceClient
+from utils.inference import ModelLoader
 
 
 load_dotenv()
