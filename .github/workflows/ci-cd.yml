@@ -144,6 +144,12 @@ jobs:
 
             blobs = [b for b in container_client.list_blobs() if b.name.endswith("model.pkl")]
 
+            for blob in blobs:
+              print(f"Name: {blob.name}")
+              print(f"  Size: {blob.size} bytes")
+              print(f"  Last modified: {blob.last_modified}")
+              print("-" * 40)
+
             # blobs = [
             #           b for b in container_client.list_blobs()
             #           if b.name.endswith("model.pkl")
