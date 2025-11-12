@@ -148,25 +148,29 @@ jobs:
                 raise SystemExit("No model.pkl found in container.")
 
             blobs.sort(key=lambda b: b.last_modified)
-            latest_blob = blobs[-1]
+            latest_blobs = blobs[-2:]
 
-            parts = latest_blob.name.split('/')
-            try:
-                model_id = parts[2]  # expects
-            except IndexError:
-                raise SystemExit(f"Unexpected blob path structure: {latest_blob.name}")
+            for latest_blob in latest_blobs:
 
-            local_path = os.path.join(target_dir, f"{model_id}_model.pkl")
+                parts = latest_blob.name.split('/')
+                try:
+                    model_id = parts[2]
 
-            print(f"Downloading latest model: {latest_blob.name}")
-            print(f"Model ID: {model_id}")
-            print(f"Saving to: {local_path}")
+                except IndexError:
+                    raise SystemExit(f"Unexpected blob path structure: {latest_blob.name}")
 
-            blob_client = container_client.get_blob_client(latest_blob.name)
-            with open(local_path, "wb") as f:
-                f.write(blob_client.download_blob().readall())
+                local_path = os.path.join(target_dir, f"{model_id}_model.pkl")
 
-            print(f"Model {model_id} downloaded successfully to {local_path}")
+                print(f"Downloading latest model: {latest_blob.name}")
+                print(f"Model ID: {model_id}")
+                print(f"Saving to: {local_path}")
+
+                blob_client = container_client.get_blob_client(latest_blob.name)
+
+                with open(local_path, "wb") as f:
+                    f.write(blob_client.download_blob().readall())
+
+                print(f"Model {model_id} downloaded successfully to {local_path}")
             PYCODE
 
             # # Navigate to remote deploy directory and rebuild/restart containers
@@ -188,7 +192,7 @@ jobs:
         with:
           host: ${{ secrets.AZURE_SSH_HOST }}
           username: ${{ secrets.AZURE_SSH_USER }}
-          port: ${{ secrets.AZURE_SSH_PORT || 22 }}
+          port: ${{ secrets.AZURE_SSH_PORT}}
           key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
           envs: REMOTE_DIR,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           script: |
