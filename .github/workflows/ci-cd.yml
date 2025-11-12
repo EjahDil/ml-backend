@@ -123,7 +123,7 @@ jobs:
             set -euo pipefail
 
             # Install azure-storage-blob Python package for the current user
-            python3 -m pip install --user azure-storage-blob
+            python3 -m pip install --user --break-system-packages azure-storage-blob
 
             # Download the latest model.pkl blob from Azure Blob Storage
             python3 - <<'PYCODE'
@@ -143,6 +143,7 @@ jobs:
             container_client = blob_service_client.get_container_client(container_name)
 
             blobs = [b for b in container_client.list_blobs() if b.name.endswith("model.pkl")]
+            
             if not blobs:
                 raise SystemExit("No model.pkl found in container.")
 
