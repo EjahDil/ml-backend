@@ -145,6 +145,7 @@ def predict_churn(
 
     # Load model singleton
     model = get_model_instance()
+    
     if model is None:
         raise HTTPException(status_code=500, detail="Model not loaded")
 
@@ -195,9 +196,6 @@ def predict_churn(
         "prediction_id": prediction_record.id,
         "model_version": latest_model_id
     }
-
-
-
 
 
 

@@ -25,6 +25,7 @@ class ModelLoader:
             raise EnvironmentError("MLFLOW_TRACKING_URI environment variable not set")
 
         mlflow.set_tracking_uri(tracking_uri)
+
         self.client = MlflowClient()
 
     def load_latest_best_model(self):
@@ -48,7 +49,7 @@ class ModelLoader:
         logger.info(f"Loading latest best model from run ID: {run_id}")
         
         model_uri = f"runs:/{run_id}/best_model"
-        
+
         model = mlflow.sklearn.load_model(model_uri)
         
         return model
