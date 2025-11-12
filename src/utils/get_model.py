@@ -25,6 +25,6 @@ def get_model_instance():
         url = f"https://{account_name}.blob.core.windows.net"
         service = BlobServiceClient(account_url=url, credential=account_key)
 
-        loader = ModelLoader(config_path='config/config.yml')
+        loader = ModelLoader(config_path='config/config.yaml')
         _model_instance = loader.load_latest_best_model()
     return _model_instance
