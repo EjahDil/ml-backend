@@ -152,7 +152,7 @@ jobs:
 
             parts = latest_blob.name.split('/')
             try:
-                model_id = parts[3]  # expects e.g. mlflow/1/models/m-xxxxxx/artifacts/model.pkl
+                model_id = parts[2]  # expects
             except IndexError:
                 raise SystemExit(f"Unexpected blob path structure: {latest_blob.name}")
 
@@ -169,14 +169,14 @@ jobs:
             print(f"Model {model_id} downloaded successfully to {local_path}")
             PYCODE
 
-            # Navigate to remote deploy directory and rebuild/restart containers
-            cd "$REMOTE_DIR"
-            if command -v docker compose >/dev/null 2>&1; then
-              docker compose up -d --build --remove-orphans
-            else
-              echo "docker compose not found, cannot restart services."
-              exit 1
-            fi
+            # # Navigate to remote deploy directory and rebuild/restart containers
+            # cd "$REMOTE_DIR"
+            # if command -v docker compose >/dev/null 2>&1; then
+            #   docker compose up -d --build --remove-orphans
+            # else
+            #   echo "docker compose not found, cannot restart services."
+            #   exit 1
+            # fi
 
 
       - name: Pull image and deploy on remote VM (docker-compose)
