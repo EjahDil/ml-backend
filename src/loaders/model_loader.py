@@ -95,48 +95,112 @@ import joblib
 import yaml
 import pandas as pd
 
+# class ModelArtifacts:
+#     models = {}  # dictionary: model_id -> model object
+#     fe = None
+#     model_names = []  # list of loaded model IDs (optional)
+
+#     @classmethod
+#     def load(cls, train_df: pd.DataFrame, models_dir: str = "./models", num_models: int = 2):
+
+#         if cls.models and cls.fe:
+#             return
+
+#         models_path = Path(models_dir)
+
+#         # Find all model files matching pattern *_model.pkl
+#         model_files = list(models_path.glob("*_model.pkl"))
+        
+#         if not model_files:
+#             raise FileNotFoundError(f"No model files found in {models_dir}")
+
+#         # Sort by modification time descending (latest first)
+#         model_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+#         # Pick up to num_models latest files
+#         latest_models = model_files[:num_models]
+
+#         # Load models
+#         for model_file in latest_models:
+#             # Extract model_id from filename
+#             model_id = model_file.stem.replace("_model", "")
+
+#             cls.models[model_id] = joblib.load(model_file)
+
+#         # Load FE config (same for all models, adjust if needed)
+#         BASE_DIR = Path(__file__).resolve().parent.parent
+#         CONFIG_FILE = BASE_DIR / "config" / "config.yaml"
+
+#         with open(CONFIG_FILE, "r") as f:
+#             config = yaml.safe_load(f)
+
+#         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
+
+#         # Fit FE on training df (once)
+#         cls.fe.fit(train_df)
+
+#         # Keep track of loaded model IDs
+#         cls.model_names = list(cls.models.keys())
+
+
+import re
+import joblib
+import yaml
+import pandas as pd
+from pathlib import Path
+
+
 class ModelArtifacts:
-    models = {}  # dictionary: model_id -> model object
+    models = {}
     fe = None
-    model_names = []  # list of loaded model IDs (optional)
+    model_name = None
 
     @classmethod
-    def load(cls, train_df: pd.DataFrame, models_dir: str = "./models", num_models: int = 2):
+    def load(cls, train_df: pd.DataFrame, models_dir: str = "./models"):
+        """
+        Load the latest trained model and initialize feature engineering.
+        """
 
         if cls.models and cls.fe:
             return
 
         models_path = Path(models_dir)
+        model_files = sorted(
+            models_path.glob("*_model.pkl"),
+            key=lambda f: f.stat().st_mtime,
+            reverse=True
+        )
 
-        # Find all model files matching pattern *_model.pkl
-        model_files = list(models_path.glob("*_model.pkl"))
-        
         if not model_files:
             raise FileNotFoundError(f"No model files found in {models_dir}")
 
-        # Sort by modification time descending (latest first)
-        model_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+        latest_model = model_files[0]
 
-        # Pick up to num_models latest files
-        latest_models = model_files[:num_models]
+        # Robust extraction of model ID using regex
+        match = re.search(r"([^/\\]+)_model\.pkl$", latest_model.name)
+        if match:
+            model_id = match.group(1)
+        else:
+            # fallback: use filename without extension
+            model_id = latest_model.stem
 
-        # Load models
-        for model_file in latest_models:
-            # Extract model_id from filename
-            model_id = model_file.stem.replace("_model", "")
-            
-            cls.models[model_id] = joblib.load(model_file)
+        # Load model safely
+        try:
+            cls.models[model_id] = joblib.load(latest_model)
+            cls.model_name = model_id
+        except Exception as e:
+            raise RuntimeError(f"Failed to load model {latest_model}: {e}")
 
-        # Load FE config (same for all models, adjust if needed)
+        # Load config
         BASE_DIR = Path(__file__).resolve().parent.parent
         CONFIG_FILE = BASE_DIR / "config" / "config.yaml"
+        if not CONFIG_FILE.exists():
+            raise FileNotFoundError(f"Config file not found: {CONFIG_FILE}")
+
         with open(CONFIG_FILE, "r") as f:
             config = yaml.safe_load(f)
 
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
-
-        # Fit FE on training df (once)
         cls.fe.fit(train_df)
 
-        # Keep track of loaded model IDs
-        cls.model_names = list(cls.models.keys())
+        print(f"Successfully loaded model: {model_id} ({latest_model.name})")
