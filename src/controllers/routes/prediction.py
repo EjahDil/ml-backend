@@ -28,7 +28,7 @@ def predict_churn(
     df = pd.DataFrame([data.model_dump()])
 
     # Check if model is loaded
-    if not ModelArtifacts.models or ModelArtifacts.model_name is None:
+    if not ModelArtifacts.model or ModelArtifacts.model_name is None:
         raise HTTPException(status_code=500, detail="Model is not loaded")
 
     # model_id = ModelArtifacts.model_name
@@ -132,6 +132,8 @@ def predict_from_call_session(
         "prediction_id": prediction_record.id,
         "model_version": ModelArtifacts.version
     }
+
+
 
 
 
