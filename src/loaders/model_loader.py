@@ -94,6 +94,7 @@ from pathlib import Path
 import joblib
 import yaml
 import pandas as pd
+from dotenv import load_dotenv
 
 # class ModelArtifacts:
 #     models = {}  # dictionary: model_id -> model object
@@ -207,38 +208,33 @@ from pathlib import Path
 #         print(f"Successfully loaded model: {model_id} ({latest_model.name})")
 
 
+load_dotenv()
+
 class ModelArtifacts:
     model = None
     fe = None
     model_name = None
+    version = None
 
     @classmethod
-    def load(cls, train_df: pd.DataFrame, models_dir: str = "./models"):
-        if cls.model is not None and cls.fe is not None:
+    def load(cls, train_df: pd.DataFrame):
+        if cls.model and cls.fe:
             return
 
-        models_path = Path(models_dir)
-        model_file = models_path / "model.pkl"
+        # ALWAYS load model locally from project models dir
+        local_model = Path("./models/model.pkl")
+        cls.model = joblib.load(local_model)
 
-        if not model_file.exists():
-            raise FileNotFoundError(f"Model file not found: {model_file}")
-
+        # Load FE config
         BASE_DIR = Path(__file__).resolve().parent.parent
-        config_file = BASE_DIR / "config" / "config.yaml"
-
-        if not config_file.exists():
-            raise FileNotFoundError(f"Config file not found: {config_file}")
-
-        with open(config_file, "r") as f:
+        CONFIG_FILE = BASE_DIR / "config" / "config.yaml"
+        with open(CONFIG_FILE, "r") as f:
             config = yaml.safe_load(f)
 
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
+
+        # Fit FE on training df
         cls.fe.fit(train_df)
-
-        cls.model = joblib.load(model_file)
-        cls.model_name = "model"
-
-        print(f"Successfully loaded model: model")
 
 
 
