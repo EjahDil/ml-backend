@@ -2,11 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 import pandas as pd
 from sqlmodel import Session, select
 from schemas.churn_input import ChurnInput
-from models.model import User, Prediction, PredictionLog
+from models.model import User, Prediction, PredictionLog, Feedback
 from controllers.middleware.auth import get_current_user, get_session
 from schemas.schema import PredictionRead, PredictionRequest
 from typing import List
 from loaders.model_loader import ModelArtifacts
+from sqlmodel import delete
+
 
 router = APIRouter(prefix="/predict", tags=["Prediction"])
 
@@ -156,16 +158,15 @@ def get_prediction(
 def delete_prediction(
     prediction_id: int,
     session: Session = Depends(get_session),
-    current_user: User = Depends(get_current_user)  # endpoint still protected
+    current_user: User = Depends(get_current_user)
 ):
-    """
-    Delete a prediction by its ID.
-    
-    Authentication is required, but predictions are not user-specific.
-    """
     prediction = session.get(Prediction, prediction_id)
+
     if not prediction:
         raise HTTPException(status_code=404, detail="Prediction not found")
 
+    # Delete feedbacks linked to the prediction
+    session.exec(delete(Feedback).where(Feedback.prediction_id == prediction_id))
+    
     session.delete(prediction)
     session.commit()
