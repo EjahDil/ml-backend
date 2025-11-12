@@ -49,6 +49,7 @@ services:
     volumes:
       - ./training-data:/app/training-data
       - ./models:/app/models
+      - ./config/config.yaml:/app/config/config.yaml
 
 volumes:
   postgres_data:
