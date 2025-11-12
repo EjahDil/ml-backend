@@ -208,17 +208,13 @@ from pathlib import Path
 
 
 class ModelArtifacts:
-    models = {}
+    model = None
     fe = None
     model_name = None
 
     @classmethod
     def load(cls, train_df: pd.DataFrame, models_dir: str = "./models"):
-        """
-        Load the hardcoded model 'model.pkl' and initialize feature engineering.
-        """
-
-        if cls.model and cls.fe:
+        if cls.model is not None and cls.fe is not None:
             return
 
         models_path = Path(models_dir)
@@ -227,11 +223,9 @@ class ModelArtifacts:
         if not model_file.exists():
             raise FileNotFoundError(f"Model file not found: {model_file}")
 
-        # Use a fixed key 'model' since the filename is fixed
         cls.model = joblib.load(model_file)
         cls.model_name = "model"
 
-        # Load config file
         BASE_DIR = Path(__file__).resolve().parent.parent
         config_file = BASE_DIR / "config" / "config.yaml"
 
@@ -241,12 +235,11 @@ class ModelArtifacts:
         with open(config_file, "r") as f:
             config = yaml.safe_load(f)
 
-        # Initialize and fit feature engineering
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
-
         cls.fe.fit(train_df)
 
         print(f"Successfully loaded model: model")
+
 
 
 
