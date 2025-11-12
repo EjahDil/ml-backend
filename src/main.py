@@ -14,6 +14,7 @@ import structlog
 from prometheus_fastapi_instrumentator import Instrumentator
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from utils.data_fetcher import load_data_and_models
 # from db.database import engine,Base
 from controllers.routes.users import router as users_router
 from utils.logging import configure_logging
@@ -47,10 +48,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print("Failed to create default admin:", e)
 
-    # try:
-    #    load_data_and_models("cell2celltrain.csv")
-    # except Exception as e:
-    #     print("Failed to download or load training data and ML artifacts:", e)
+    try:
+       load_data_and_models("cell2celltrain.csv")
+    except Exception as e:
+        print("Failed to download or load training data and ML artifacts:", e)
 
     yield
 

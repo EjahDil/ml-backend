@@ -1,87 +1,141 @@
-import os
-import mlflow
-from mlflow.tracking import MlflowClient
-import pandas as pd
-from dotenv import load_dotenv
-from azure.storage.blob import BlobServiceClient
-import logging
+# import pickle
+# import joblib
+# from pathlib import Path
+# from .blob_loader import BlobLoader
+# import os
+# from dotenv import load_dotenv
+
+
+# load_dotenv()
+
+# class ModelArtifacts:
+#     model = None
+#     fe = None
+
+#     @classmethod
+#     def load(cls):
+#         if cls.model and cls.fe:
+#             return  # already loaded
+
+#         loader = BlobLoader()
+
+#         # Azure blob paths from env vars
+#         model_blob = os.getenv(
+#             "MODEL_BLOB_PATH",
+#             "mlflow/1/models/m-1294491f521b479d96686a0db03633ee/artifacts/model.pkl"
+#         )
+#         fe_blob = os.getenv(
+#             "FE_BLOB_PATH",
+#             "mlflow/1/8855e82beb474da283e4832922211732/artifacts/mlflow-artifacts/feature_engineer.joblib"
+#         )
+
+#         # Local paths from env vars or defaults
+#         local_model = os.getenv("LOCAL_MODEL_PATH", "/tmp/model.pkl")
+#         local_fe = os.getenv("LOCAL_FE_PATH", "/tmp/feature_engineer.joblib")
+
+#         loader.download(model_blob, local_model)
+#         loader.download(fe_blob, local_fe)
+
+#         cls.model = joblib.load(local_model)
+
+#         cls.fe = joblib.load(local_fe)  
+
+
+# import joblib
+# from pathlib import Path
+# from .blob_loader import BlobLoader
+# from ml.feature_engineering import FeatureEngineering
+# import os
+# import yaml
+# from dotenv import load_dotenv
+# import pandas as pd
+
+# load_dotenv()
+
+# class ModelArtifacts:
+#     model = None
+#     fe = None
+#     model_name = None
+#     version = None
+
+#     @classmethod
+#     def load(cls, train_df: pd.DataFrame):
+#         if cls.model and cls.fe:
+#             return
+
+#         # Load model as you already do
+#         loader = BlobLoader()
+#         model_blob = os.getenv("MODEL_BLOB_PATH")
+#         local_model = Path(os.getenv("LOCAL_MODEL_PATH", "/tmp/model.pkl"))
+#         loader.download(model_blob, local_model)
+
+#         cls.model = joblib.load(local_model)
+
+#         # Initialize FE (load config)
+#         BASE_DIR = Path(__file__).resolve().parent.parent
+#         CONFIG_FILE = BASE_DIR / "config" / "config.yaml"
+#         with open(CONFIG_FILE, "r") as f:
+#             config = yaml.safe_load(f)
+            
+#         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
+
+#         # Fit FE on the training data (or representative sample)
+#         cls.fe.fit(train_df)
+
+
+import joblib
+from pathlib import Path
+from ml.feature_engineering import FeatureEngineering
+# import os
 import yaml
+import pandas as pd
 
-load_dotenv()
+from pathlib import Path
+import joblib
+import yaml
+import pandas as pd
 
-logger = logging.getLogger(__name__)
+class ModelArtifacts:
+    models = {}  # dictionary: model_id -> model object
+    fe = None
+    model_names = []  # list of loaded model IDs (optional)
 
-logging.basicConfig(level=logging.INFO)
+    @classmethod
+    def load(cls, train_df: pd.DataFrame, models_dir: str = "./models", num_models: int = 2):
 
-class ModelLoader:
-    def __init__(self, config_path: str):
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
+        if cls.models and cls.fe:
+            return
+
+        models_path = Path(models_dir)
+
+        # Find all model files matching pattern *_model.pkl
+        model_files = list(models_path.glob("*_model.pkl"))
         
-        self.mlflow_config = self.config['mlflow']
+        if not model_files:
+            raise FileNotFoundError(f"No model files found in {models_dir}")
 
-        tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+        # Sort by modification time descending (latest first)
+        model_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
 
-        if not tracking_uri:
-            raise EnvironmentError("MLFLOW_TRACKING_URI environment variable not set")
+        # Pick up to num_models latest files
+        latest_models = model_files[:num_models]
 
-        mlflow.set_tracking_uri(tracking_uri)
-        self.client = MlflowClient()
+        # Load models
+        for model_file in latest_models:
+            # Extract model_id from filename
+            model_id = model_file.stem.replace("_model", "")
+            cls.models[model_id] = joblib.load(model_file)
 
-    def load_latest_best_model(self):
-        experiment_name = self.mlflow_config['experiment_name']
-        experiment = self.client.get_experiment_by_name(experiment_name)
+        # Load FE config (same for all models, adjust if needed)
+        BASE_DIR = Path(__file__).resolve().parent.parent
+        CONFIG_FILE = BASE_DIR / "config" / "config.yaml"
+        with open(CONFIG_FILE, "r") as f:
+            config = yaml.safe_load(f)
 
-        if experiment is None:
-            raise ValueError(f"Experiment '{experiment_name}' not found")
+        cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
 
-        runs = self.client.search_runs(
-            experiment_ids=[experiment.experiment_id],
-            filter_string="attributes.run_name LIKE 'best_model_%'",
-            order_by=["attributes.start_time DESC"]
-        )
+        # Fit FE on training df (once)
+        cls.fe.fit(train_df)
 
-        if not runs:
-            raise ValueError("No best model runs found")
-
-        latest_run = runs[0]
-        run_id = latest_run.info.run_id
-        logger.info(f"Loading latest best model from run ID: {run_id}")
-        
-        model_uri = f"runs:/{run_id}/best_model"
-        model = mlflow.sklearn.load_model(model_uri)
-        
-        return model
-
-
-# if __name__ == "__main__":
-
-#     account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
-#     account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
-
-#     os.environ["AZURE_STORAGE_CONNECTION_STRING"] = (
-#         f"DefaultEndpointsProtocol=https;"
-#         f"AccountName={account_name};"
-#         f"AccountKey={account_key};"
-#         f"EndpointSuffix=core.windows.net"
-#     )
-
-#     url = f"https://{account_name}.blob.core.windows.net"
-#     service = BlobServiceClient(account_url=url, credential=account_key)
-
-#     try:
-#         print("..."*60)
-#         loader = ModelLoader(config_path='configs/train_config.yml')
-
-#         # --- Fetch model ---
-#         model = loader.load_latest_best_model()
-
-#         # --- Predict on a sample dataset ---
-#         sample_data = pd.read_csv("data/sample.csv")
-#         predictions = model.predict(sample_data)
-
-#         print("✅ Predictions:")
-#         print(predictions[:10])  # show first few predictions
-
-#     except Exception as e:
-#         logger.error(f"❌ Error loading model or predicting: {str(e)}")
+        # Keep track of loaded model IDs
+        cls.model_names = list(cls.models.keys())
