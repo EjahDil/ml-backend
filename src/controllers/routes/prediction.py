@@ -15,7 +15,6 @@ router = APIRouter(prefix="/predict", tags=["Prediction"])
 
 
 
-
 ### Optimized prediction endpoint
 @router.post("/", summary="Predict Customer Churn", response_model=dict)
 def predict_churn(
@@ -29,7 +28,7 @@ def predict_churn(
     df = pd.DataFrame([data.model_dump()])
 
     # Check if model is loaded
-    if not ModelArtifacts.model is None:
+    if ModelArtifacts.model is None:
         raise HTTPException(status_code=500, detail="Model is not loaded")
 
     # model_id = ModelArtifacts.model_name
