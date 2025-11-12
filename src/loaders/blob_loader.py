@@ -1,21 +1,35 @@
 from azure.storage.blob import BlobServiceClient
 from pathlib import Path
 import os
+from dotenv import load_dotenv
 
-class BlobLoader:
-    def __init__(self, container_name: str = None):
-        self.conn_str = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-        # Use the passed container_name if given, else fallback to env var
-        self.container_name = container_name or os.environ.get("AZURE_STORAGE_CONTAINER_NAME")
-        if not self.container_name:
-            raise ValueError("Container name must be provided either via argument or AZURE_STORAGE_CONTAINER_NAME env var")
+load_dotenv()
 
-        self.client = BlobServiceClient.from_connection_string(self.conn_str)
+# class BlobLoader:
+#     def __init__(self, container_name: str = None):
+#         self.conn_str = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+#         # Use the passed container_name if given, else fallback to env var
+#         self.container_name = container_name or os.environ.get("AZURE_STORAGE_CONTAINER_NAME")
+#         if not self.container_name:
+#             raise ValueError("Container name must be provided either via argument or AZURE_STORAGE_CONTAINER_NAME env var")
 
-    def download(self, blob_path: str, local_path: str):
-        container = self.client.get_container_client(self.container_name)
-        blob = container.get_blob_client(blob_path)
-        Path(local_path).parent.mkdir(parents=True, exist_ok=True)
-        with open(local_path, "wb") as f:
-            data = blob.download_blob().readall()
-            f.write(data)
+#         self.client = BlobServiceClient.from_connection_string(self.conn_str)
+
+#     def download(self, blob_path: str, local_path: str):
+#         container = self.client.get_container_client(self.container_name)
+#         blob = container.get_blob_client(blob_path)
+#         Path(local_path).parent.mkdir(parents=True, exist_ok=True)
+#         with open(local_path, "wb") as f:
+#             data = blob.download_blob().readall()
+#             f.write(data)
+
+AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
+CONTAINER_NAME = os.getenv("AZURE_CONTAINER_NAME", "mlflow") 
+
+
+if not AZURE_CONNECTION_STRING:
+    raise ValueError("Missing environment variable: AZURE_CONNECTION_STRING")
+
+
+blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONNECTION_STRING)
+container_client = blob_service_client.get_container_client(CONTAINER_NAME)
