@@ -60,13 +60,15 @@ class ModelArtifacts:
 
     @classmethod
     def load(cls, train_df: pd.DataFrame, models_dir: str = "./models", num_models: int = 2):
+
         if cls.models and cls.fe:
-            return  # already loaded
+            return
 
         models_path = Path(models_dir)
 
         # Find all model files matching pattern *_model.pkl
         model_files = list(models_path.glob("*_model.pkl"))
+        
         if not model_files:
             raise FileNotFoundError(f"No model files found in {models_dir}")
 
