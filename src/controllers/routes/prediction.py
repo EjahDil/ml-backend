@@ -14,7 +14,6 @@ from sqlmodel import delete
 router = APIRouter(prefix="/predict", tags=["Prediction"])
 
 
-
 ### Optimized prediction endpoint
 @router.post("/", summary="Predict Customer Churn", response_model=dict)
 def predict_churn(
@@ -263,3 +262,26 @@ def delete_prediction(
     # Now delete the prediction itself
     session.delete(prediction)
     session.commit()
+
+
+@router.delete("/predictions/all", status_code=status.HTTP_200_OK)
+def delete_all_predictions(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete all predictions from the database, including associated logs and feedbacks.
+    Recommended for admin users only.
+    """
+
+    # Optional: restrict access to admins only
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="You are not authorized to perform this action.")
+
+    # Delete logs first to avoid foreign key constraints
+    session.exec(delete(PredictionLog))
+    session.exec(delete(Feedback))
+    session.exec(delete(Prediction))
+    session.commit()
+
+    return {"message": "All predictions and related records have been deleted successfully."}
