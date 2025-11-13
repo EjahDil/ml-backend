@@ -254,8 +254,12 @@ def delete_prediction(
     if not prediction:
         raise HTTPException(status_code=404, detail="Prediction not found")
 
+    # Delete logs linked to the prediction first
+    session.exec(delete(PredictionLog).where(PredictionLog.prediction_id == prediction_id))
+
     # Delete feedbacks linked to the prediction
     session.exec(delete(Feedback).where(Feedback.prediction_id == prediction_id))
     
+    # Now delete the prediction itself
     session.delete(prediction)
     session.commit()
