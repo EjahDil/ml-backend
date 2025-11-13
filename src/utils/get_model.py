@@ -13,7 +13,6 @@ _model_instance = None
 def get_model_instance():
     global _model_instance
     if _model_instance is None:
-        # Set up Azure credentials in env so MLflow can access artifacts
         account_name = os.getenv("AZURE_STORAGE_ACCOUNT_NAME")
         account_key = os.getenv("AZURE_STORAGE_ACCOUNT_KEY")
         os.environ["AZURE_STORAGE_CONNECTION_STRING"] = (
