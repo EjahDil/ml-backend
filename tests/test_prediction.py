@@ -10,7 +10,6 @@ sample_payload = {
     "feature1": 1,
     "feature2": 0,
     "feature3": 5.4,
-    # Add all required features expected by ChurnInput here
 }
 
 @pytest.fixture
@@ -19,13 +18,13 @@ def client():
 
 # Mock for ModelArtifacts singleton model and feature engineering transform
 def mock_model_predict(X):
-    return [1]  # Predicted class
+    return [1] 
 
 def mock_model_predict_proba(X):
-    return [[0.3, 0.7]]  # Probability for class 1
+    return [[0.3, 0.7]] 
 
 def mock_transform(df):
-    return df  # Assume transformation is identity for testing
+    return df 
 
 # Test /predict/ endpoint using ModelArtifacts
 @patch("app.routers.predict.ModelArtifacts.model", new_callable=MagicMock)
@@ -39,7 +38,6 @@ def test_predict_churn(mock_fe, mock_model, client):
     # Prepare payload matching ChurnInput schema
     payload = sample_payload
 
-    # Provide fake user authentication dependency override if needed
     # client.app.dependency_overrides[get_current_user] = lambda: FakeUserObject()
 
     response = client.post("/predict/", json=payload)
@@ -91,5 +89,3 @@ def test_predict_from_call_session(mock_fe, mock_model, client):
     assert data["external_customer_id"] == "cust_12345"
     assert data["prediction"] == 1
     assert abs(data["probability"] - 0.7) < 1e-5
-
-# Add tests for GET /predictions/ and DELETE /predictions/{id} as needed with db setup or mocks.
