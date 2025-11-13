@@ -112,6 +112,7 @@ class PredictionRead(BaseModel):
     input_data: str
     prediction: int
     probability: float
+    customer_id: str
     created_at: Optional[datetime]
 
     class Config:
