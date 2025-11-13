@@ -10,7 +10,7 @@ from models.model import User as UserModel
 import mlflow
 import os
 
-router = APIRouter(prefix="/api", tags=["Telecom Churn"])
+router = APIRouter(prefix="/api", tags=["Telecom Churn Team"])
 
 # USERS
 
