@@ -49,7 +49,7 @@ class Prediction(SQLModel, table=True):
     __tablename__ = "predictions"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    external_customer_id: Optional[int] = Field(default=None, index=True, nullable=True)
+    external_customer_id: Optional[str] = Field(default=None, index=True, nullable=True)
     model_id: Optional[int] = Field(default=None, foreign_key="mlmodels.id", nullable=True)
     input_data: str 
     prediction: int
