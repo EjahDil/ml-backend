@@ -112,7 +112,7 @@ class PredictionRead(BaseModel):
     input_data: str
     prediction: int
     probability: float
-    external_customer_id: str
+    external_customer_id: Optional[str] = None
     created_at: Optional[datetime]
 
     class Config:
