@@ -26,7 +26,6 @@ def predict_churn(
 
     df = pd.DataFrame([data.model_dump()])
 
-    # Check if model is loaded
     if ModelArtifacts.model is None:
         raise HTTPException(status_code=500, detail="Model is not loaded")
 
@@ -37,10 +36,8 @@ def predict_churn(
     if model is None:
         raise HTTPException(status_code=500, detail="Model not found")
 
-    # Transform input features using feature engineering
     X = ModelArtifacts.fe.transform(df)
 
-    # Predict using the loaded model
     y_pred = model.predict(X)[0]
     prob = float(model.predict_proba(X)[0, 1])
 
@@ -60,7 +57,6 @@ def predict_churn(
         # session.commit()
         # session.refresh(model_record)
 
-    # Store prediction with the model_id foreign key
     prediction_record = Prediction(
         user_id=current_user.id,
         input_data=df.to_json(),
@@ -73,7 +69,6 @@ def predict_churn(
     session.commit()
     session.refresh(prediction_record)
 
-    # Log prediction request metadata
     log_record = PredictionLog(
         prediction_id=prediction_record.id,
         user_id=current_user.id,
@@ -97,7 +92,6 @@ def predict_from_call_session(
     request: PredictionRequest,
     session: Session = Depends(get_session)
 ):
-    # Extract external_customer_id from request data
     external_customer_id = request.customer_id
 
     if external_customer_id is None:
@@ -107,7 +101,6 @@ def predict_from_call_session(
     # user_id_str = request.current_user.get("id") if request.current_user else None
     # user_id = UUID(user_id_str) if user_id_str else None
 
-    # Data for prediction
     df = pd.DataFrame([request.data])
 
     X = ModelArtifacts.fe.transform(df)
@@ -204,9 +197,6 @@ def predict_from_call_session(
 
 
 
-
-# Endpoint to list all predictions
-
 @router.get("/predictions/", response_model=List[PredictionRead])
 def list_predictions(
     session: Session = Depends(get_session),
@@ -221,8 +211,6 @@ def list_predictions(
     return predictions
 
 
-
-# Endpoint: Get a single prediction
 
 @router.get("/predictions/{prediction_id}", response_model=PredictionRead)
 def get_prediction(
@@ -253,13 +241,10 @@ def delete_prediction(
     if not prediction:
         raise HTTPException(status_code=404, detail="Prediction not found")
 
-    # Delete logs linked to the prediction first
     session.exec(delete(PredictionLog).where(PredictionLog.prediction_id == prediction_id))
 
-    # Delete feedbacks linked to the prediction
     session.exec(delete(Feedback).where(Feedback.prediction_id == prediction_id))
     
-    # Now delete the prediction itself
     session.delete(prediction)
     session.commit()
 
@@ -273,12 +258,9 @@ def delete_all_predictions(
     Delete all predictions from the database, including associated logs and feedbacks.
     Recommended for admin users only.
     """
-
-    # Optional: restrict access to admins only
     if not current_user.is_admin:
         raise HTTPException(status_code=403, detail="You are not authorized to perform this action.")
 
-    # Delete logs first to avoid foreign key constraints
     session.exec(delete(PredictionLog))
     session.exec(delete(Feedback))
     session.exec(delete(Prediction))

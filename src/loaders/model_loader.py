@@ -118,19 +118,17 @@ class ModelArtifacts:
         if cls.model and cls.fe:
             return
 
-        # ALWAYS load model locally from project models dir
         local_model = Path("./models/model.pkl")
         cls.model = joblib.load(local_model)
 
-        # Load FE config
+
         BASE_DIR = Path(__file__).resolve().parent.parent
         CONFIG_FILE = BASE_DIR / "config" / "config.yaml"
         with open(CONFIG_FILE, "r") as f:
             config = yaml.safe_load(f)
 
         cls.fe = FeatureEngineering(config, unknown_token="_UNK_")
-
-        # Fit FE on training df
+        
         cls.fe.fit(train_df)
 
 

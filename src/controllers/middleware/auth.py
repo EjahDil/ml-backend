@@ -30,7 +30,6 @@ if SECRET_KEY_PATH.exists():
 else:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
-# Not secret configs – safe from env
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
@@ -38,7 +37,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer()
 
-# JWT & Password configuration
 password_hash = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -67,7 +65,6 @@ def decode_token(token: str = Depends(bearer_scheme)):
         raise HTTPException(status_code=401, detail="Token has expired or is invalid")
     
 
-# Dependency: get current authenticated user
 def get_current_user(token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

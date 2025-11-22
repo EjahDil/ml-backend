@@ -27,7 +27,6 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
 
-    # Relationships
     feedbacks: List["Feedback"] = Relationship(back_populates="user")
     logs: List["PredictionLog"] = Relationship(back_populates="user")
 
@@ -41,7 +40,6 @@ class MLModel(SQLModel, table=True):
     description: Optional[str]
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    # Now back_populates from Prediction, one-to-many (a model can be used for many predictions)
     predictions: List["Prediction"] = Relationship(back_populates="model")
 
 
@@ -56,7 +54,6 @@ class Prediction(SQLModel, table=True):
     probability: float
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    # No user relation
     model: Optional[MLModel] = Relationship(back_populates="predictions")
     feedbacks: List["Feedback"] = Relationship(back_populates="prediction")
     logs: List["PredictionLog"] = Relationship(back_populates="prediction")
@@ -69,7 +66,7 @@ class Feedback(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     prediction_id: int = Field(foreign_key="predictions.id")
     user_id: UUID = Field(foreign_key="users.id")
-    correct: Optional[bool]  # Was the prediction correct?
+    correct: Optional[bool]
     comment: Optional[str]
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

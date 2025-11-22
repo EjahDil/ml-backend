@@ -8,7 +8,6 @@ load_dotenv()
 class BlobLoader:
     def __init__(self, container_name: str = None):
         self.conn_str = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-        # Use the passed container_name if given, else fallback to env var
         self.container_name = container_name or os.environ.get("AZURE_STORAGE_CONTAINER_NAME")
         if not self.container_name:
             raise ValueError("Container name must be provided either via argument or AZURE_STORAGE_CONTAINER_NAME env var")

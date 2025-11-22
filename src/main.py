@@ -21,17 +21,6 @@ from utils.logging import configure_logging
 from controllers.middleware.middleware import RequestIDMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 
-# @app.on_event("startup")
-# def on_startup():
-#     # ensure tables exist
-#     create_db_and_tables()
-
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     # Startup code
-#     create_db_and_tables_2()
-#     yield
-
 
 configure_logging(log_level="INFO", json_logs=True)
 
@@ -41,7 +30,6 @@ log = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # --- Startup Block ---
     create_db_and_tables()
     try:
         create_default_admin()
@@ -92,7 +80,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Churn Prediction API", lifespan=lifespan)
 
-# PROMETHEUS METRICS INSTRUMENTATION 
 instrumentator = Instrumentator(
     should_group_status_codes=True,
     should_ignore_untemplated=True,
@@ -101,7 +88,6 @@ instrumentator = Instrumentator(
 instrumentator.instrument(app).expose(app)
 
 
-# Register routers
 app.include_router(health_check.router)
 app.include_router(users.router)
 app.include_router(prediction.router)
@@ -138,4 +124,4 @@ app.add_middleware(
 @app.get("/")
 def root():
     log.info("root_endpoint_called", method="GET", path="/")
-    return {"message": "ML Backend API"}
+    return {"message": "Telecom Churn API"}

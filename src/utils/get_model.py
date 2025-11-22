@@ -7,7 +7,7 @@ from utils.inference import ModelLoader
 
 load_dotenv()
 
-# Singleton pattern to load model once
+
 _model_instance = None
 
 def get_model_instance():

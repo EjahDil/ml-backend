@@ -2,17 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from typing import List
 from schemas.schema import UserRead, FeedbackRead, FeedbackCreate, User, UserOut, UserNameRoleResponse
-from schemas.schema import MLModelRead, MLModelCreate
+# from schemas.schema import MLModelRead, MLModelCreate
 from db.database import get_session
 from controllers.middleware.auth import get_current_user
 from models.model import Feedback, MLModel, PredictionLog, UserRole
 from models.model import User as UserModel
-import mlflow
-import os
 
 router = APIRouter(prefix="/api", tags=["Telecom Churn Team"])
 
-# USERS
 
 @router.get("/users/me", response_model=UserNameRoleResponse)
 def get_me(current_user: User = Depends(get_current_user)):
@@ -21,7 +18,6 @@ def get_me(current_user: User = Depends(get_current_user)):
         role=current_user.role.value if hasattr(current_user.role, "value") else current_user.role
     )
 
-# Admin-only users listing
 
 @router.get("/users/", response_model=List[UserOut])
 def list_users(
@@ -31,20 +27,16 @@ def list_users(
     """
     List all users — Admin access only
     """
-    # Check if the current user has an admin role
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required"
         )
 
-    # Fetch all users
     users = session.exec(select(UserModel)).all()
     return users
 
 
-
-# FEEDBACK
 
 @router.post("/feedback/", response_model=FeedbackRead)
 def create_feedback(
@@ -56,23 +48,19 @@ def create_feedback(
     Submit feedback for a prediction. 
     Only the authenticated user can submit feedback.
     """
-    # Create SQLModel Feedback instance
     feedback = Feedback(
         prediction_id=feedback_in.prediction_id,
         correct=feedback_in.correct,
         comment=feedback_in.comment,
-        user_id=current_user.id  # enforce user ownership
+        user_id=current_user.id 
     )
 
-    # Add and commit to DB
     session.add(feedback)
     session.commit()
     session.refresh(feedback)
 
     return feedback
 
-
-# Admin-only endpoint
 
 @router.get("/feedback/", response_model=List[FeedbackRead])
 def list_feedback(
@@ -176,7 +164,6 @@ def list_logs(
 ):
     """Get all prediction logs (for all users). Admin only."""
     
-    # Check if current user is admin
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -3,8 +3,6 @@ from typing import Optional, Dict
 from datetime import datetime
 from uuid import UUID
 
-# User schemas
-
 class UserBase(BaseModel):
     username: str
     email: Optional[str] = None
@@ -99,8 +97,6 @@ class UserNameRoleResponse(BaseModel):
     role: str
 
 
-
-# Pydantic schema for model creation
 
 class MLModelCreate(BaseModel):
     name: str

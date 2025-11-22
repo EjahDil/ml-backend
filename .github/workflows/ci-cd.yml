@@ -104,7 +104,6 @@ jobs:
           source: "./docker-compose.yml"
           target: ${{ env.REMOTE_DEPLOY_DIR }}
           strip_components: 0
-        # Note: source supports globbing; copy additional files if needed
 
       - name: Download latest model and restart service on remote VM
         uses: appleboy/ssh-action@v1
@@ -185,6 +184,7 @@ jobs:
                     f.write(blob_client.download_blob().readall())
 
                 print(f"Model {model_id} downloaded successfully to {local_path}")
+
             PYCODE
 
             # # Navigate to remote deploy directory and rebuild/restart containers
@@ -228,5 +228,5 @@ jobs:
               exit 1
             fi
 
-            # optional: cleanup dangling images
+            # cleanup dangling images
             docker image prune -f || true

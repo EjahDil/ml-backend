@@ -13,7 +13,6 @@ def create_admin_user(
     session: Session = Depends(get_session),
     current_user: User = Depends(get_current_user)
 ):
-    # Ensure only admins can create admin accounts
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Access forbidden: Admins only")
 

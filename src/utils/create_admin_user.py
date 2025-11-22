@@ -26,7 +26,6 @@ def create_default_admin() -> None:
     admin_username = os.getenv("ADMIN_USERNAME")
     admin_email = os.getenv("ADMIN_EMAIL")
 
-    # SECRET – read from docker secret first
     admin_password = read_secret("/run/secrets/admin_password") or os.getenv("ADMIN_PASSWORD")
 
     if not all([admin_username, admin_email, admin_password]):
@@ -39,7 +38,6 @@ def create_default_admin() -> None:
     session: Session = next(session_generator)
 
     try:
-        # Check if user exists already (by username OR email)
         existing_user = session.exec(
             select(User).where(
                 (User.username == admin_username) | (User.email == admin_email)
