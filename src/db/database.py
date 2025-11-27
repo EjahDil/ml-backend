@@ -26,7 +26,6 @@ POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
-# secrets (password only stored as docker secret)
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 DATABASE_URL = (
@@ -53,9 +52,8 @@ def create_db_and_tables() -> None:
     Create database tables for all imported models.
     Safe to call multiple times; existing tables are not overwritten.
     """
-    # Import all models here to ensure metadata is populated
-    from models.model import User, Prediction, PredictionLog, Feedback, MLModel  # noqa: F401
 
+    from models.model import User, Prediction, PredictionLog, Feedback, MLModel  # noqa: F401
     print("Creating database tables if they don't exist...")
     SQLModel.metadata.create_all(engine)
     print("Database tables are ready.")

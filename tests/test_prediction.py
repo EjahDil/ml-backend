@@ -16,7 +16,6 @@ sample_payload = {
 def client():
     return TestClient(app)
 
-# Mock for ModelArtifacts singleton model and feature engineering transform
 def mock_model_predict(X):
     return [1] 
 
