@@ -30,7 +30,7 @@ This backend application provides a **scalable, containerized inference service*
 ## 🛠️ Tech Stack
 
 - **Backend Framework:** FastAPI
-- **Machine Learning:** Scikit-learn / XGBoost (model-agnostic)
+- **Machine Learning:** Scikit-learn / XGBoost
 - **Language:** Python
 - **Containerization:** Docker
 - **Orchestration:** Docker Compose
