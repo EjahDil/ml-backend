@@ -39,8 +39,6 @@ This backend application provides a **scalable, containerized inference service*
 
 ---
 
-## 📂 Repository Structure
-
 # Backend for serving churn prediction
 
 This is a backend service for serving Customer Churn Machine Learning model.
