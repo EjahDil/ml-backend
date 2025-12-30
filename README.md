@@ -15,7 +15,7 @@ This backend application provides a **scalable, containerized inference service*
 
 ---
 
-## 🧠 Features
+## Features
 
 - FastAPI-based RESTful API
 - Machine learning model inference
