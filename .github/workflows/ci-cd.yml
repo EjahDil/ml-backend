@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - ci/cd-test
-
+      - main
 permissions:
   contents: read
   id-token: write
